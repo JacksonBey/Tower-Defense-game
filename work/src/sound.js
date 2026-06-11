@@ -34,6 +34,11 @@ export class SoundSystem {
     this.ctx = null;
     this.lastShot = 0;
     this.noiseBuffer = null;
+    this.droneOsc = null;
+    this.droneGain = null;
+    this.droneActive = false;
+    this.lastPreviewPlay = {};
+    this.loadedVoices = [];
 
     const hasLocalStorage = typeof localStorage !== "undefined";
     this.enabled = hasLocalStorage ? localStorage.getItem("runehold-sound-enabled") === "true" : false;
@@ -45,6 +50,15 @@ export class SoundSystem {
       build: this.loadVolume("build", 0.7),
       system: this.loadVolume("system", 0.7)
     };
+
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      if (typeof window.speechSynthesis.addEventListener === "function") {
+        window.speechSynthesis.addEventListener("voiceschanged", () => {
+          this.loadedVoices = window.speechSynthesis.getVoices();
+        });
+      }
+      this.loadedVoices = window.speechSynthesis.getVoices();
+    }
   }
 
   loadVolume(channel, defaultValue) {
@@ -78,6 +92,7 @@ export class SoundSystem {
     if (!this.noiseBuffer) {
       this.noiseBuffer = this.createNoiseBuffer();
     }
+    this.startDrone();
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("runehold-sound-enabled", "true");
     }
@@ -88,6 +103,7 @@ export class SoundSystem {
 
   disable() {
     this.enabled = false;
+    this.stopDrone();
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("runehold-sound-enabled", "false");
     }
@@ -109,6 +125,12 @@ export class SoundSystem {
       if (typeof localStorage !== "undefined") {
         localStorage.setItem(`runehold-volume-${channel}`, value.toString());
       }
+      if (channel === "master" || channel === "system") {
+        this.updateDroneVolume();
+      }
+      if (this.enabled && this.ctx) {
+        this.playPreview(channel);
+      }
     }
   }
 
@@ -120,7 +142,7 @@ export class SoundSystem {
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices();
+      const voices = this.loadedVoices.length ? this.loadedVoices : window.speechSynthesis.getVoices();
 
       // Attempt to load a deep English voice
       const voice = voices.find(
@@ -147,7 +169,7 @@ export class SoundSystem {
   }
 
   playNoise(duration, gain, filterType = "lowpass", filterFreq = 1000, finalFreq = 100) {
-    if (!this.enabled || !this.ctx || !this.noiseBuffer) return;
+    if (!this.enabled || !this.ctx || !this.noiseBuffer || typeof this.ctx.createBufferSource !== "function" || typeof this.ctx.createGain !== "function" || typeof this.ctx.createBiquadFilter !== "function") return;
     const start = this.ctx.currentTime;
     const source = this.ctx.createBufferSource();
     source.buffer = this.noiseBuffer;
@@ -170,7 +192,7 @@ export class SoundSystem {
   }
 
   toneSweep(startFreq, endFreq, duration, gain, type = "sine", delay = 0) {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.enabled || !this.ctx || typeof this.ctx.createOscillator !== "function" || typeof this.ctx.createGain !== "function") return;
     const start = this.ctx.currentTime + delay;
     const osc = this.ctx.createOscillator();
     const amp = this.ctx.createGain();
@@ -226,6 +248,76 @@ export class SoundSystem {
     }
   }
 
+  playPlace(towerType, finalGain) {
+    if (towerType === "punch") {
+      // Stoneguard Post - heavy stone slam
+      this.playNoise(0.18, finalGain * 0.9, "lowpass", 300, 50);
+      this.toneSweep(140, 40, 0.18, finalGain * 1.2, "sine");
+    } else if (towerType === "radio") {
+      // Arcane Spire - crystalline magical hum
+      this.toneSweep(500, 800, 0.15, finalGain * 0.6, "sine");
+      this.toneSweep(700, 1100, 0.15, finalGain * 0.4, "triangle", 0.04);
+    } else if (towerType === "tax") {
+      // Bounty Ballista - dry wooden snap/click
+      this.playNoise(0.06, finalGain * 0.5, "bandpass", 800, 400);
+      this.toneSweep(200, 100, 0.08, finalGain * 0.8, "triangle");
+    } else if (towerType === "freezer") {
+      // Frost Obelisk - cold wind freeze
+      this.playNoise(0.25, finalGain * 0.8, "bandpass", 1200, 600);
+      this.toneSweep(300, 150, 0.2, finalGain * 0.5, "sine");
+    } else {
+      this.playUI("place", finalGain);
+    }
+  }
+
+  playUpgrade(towerType, finalGain) {
+    if (towerType === "punch") {
+      // Heavy hammer strike
+      this.playNoise(0.2, finalGain * 0.8, "lowpass", 600, 150);
+      this.toneSweep(300, 80, 0.25, finalGain * 1.0, "sawtooth");
+    } else if (towerType === "radio") {
+      // Crystalline arpeggio chords
+      const base = 392; // G4
+      this.toneSweep(base, base * 1.5, 0.1, finalGain * 0.5, "sine");
+      this.toneSweep(base * 1.25, base * 1.875, 0.1, finalGain * 0.5, "sine", 0.06);
+      this.toneSweep(base * 1.5, base * 2.25, 0.15, finalGain * 0.6, "sine", 0.12);
+    } else if (towerType === "tax") {
+      // Mechanical winding gears
+      this.toneSweep(120, 240, 0.06, finalGain * 0.6, "triangle");
+      this.toneSweep(160, 320, 0.06, finalGain * 0.6, "triangle", 0.06);
+      this.toneSweep(200, 400, 0.08, finalGain * 0.7, "triangle", 0.12);
+    } else if (towerType === "freezer") {
+      // Ice crackling wind
+      this.playNoise(0.35, finalGain * 0.9, "highpass", 1500, 3000);
+      this.toneSweep(600, 300, 0.25, finalGain * 0.6, "sine");
+    } else {
+      this.playUI("upgrade", finalGain);
+    }
+  }
+
+  playSpawn(enemyType, finalGain) {
+    if (enemyType === "chip" || enemyType === "glass") {
+      // Imp chatter / Wisp chime
+      this.toneSweep(800, 1500, 0.08, finalGain * 0.5, "sine");
+      this.toneSweep(1200, 600, 0.08, finalGain * 0.4, "triangle", 0.04);
+    } else if (enemyType === "bolt") {
+      // Brute splash/growl
+      this.playNoise(0.15, finalGain * 0.6, "lowpass", 400, 80);
+      this.toneSweep(180, 90, 0.15, finalGain * 0.8, "sine");
+    } else if (enemyType === "vault") {
+      // Heavy Stoneback rumble
+      this.playNoise(0.35, finalGain * 0.9, "lowpass", 250, 40);
+      this.toneSweep(90, 45, 0.3, finalGain * 1.2, "sine");
+      this.toneSweep(80, 40, 0.3, finalGain * 0.9, "sine", 0.05);
+    } else if (enemyType === "static") {
+      // Hex Acolyte bubble hum
+      this.toneSweep(400, 300, 0.2, finalGain * 0.6, "triangle");
+      this.toneSweep(300, 500, 0.25, finalGain * 0.4, "sine", 0.05);
+    } else {
+      this.tone(146, 0, finalGain * 0.4, "spawn");
+    }
+  }
+
   playUI(actionType, finalGain) {
     if (actionType === "place") {
       // Stone locking-in place
@@ -256,6 +348,80 @@ export class SoundSystem {
     }
   }
 
+  playPreview(channel) {
+    const now = performance.now();
+    if (now - (this.lastPreviewPlay[channel] ?? 0) < 150) return;
+    this.lastPreviewPlay[channel] = now;
+
+    const channelVol = this.volumes[channel] ?? 0.7;
+    const masterVol = this.volumes.master ?? 0.7;
+    const finalGain = channelVol * masterVol;
+    if (finalGain <= 0.001) return;
+
+    if (channel === "combat") {
+      this.playShoot("radio", finalGain * 0.4);
+    } else if (channel === "build") {
+      this.playUI("click", finalGain * 0.8);
+    } else if (channel === "system") {
+      this.toneSweep(440, 440, 0.08, finalGain * 0.3, "sine");
+    } else if (channel === "master") {
+      this.toneSweep(523.25, 659.25, 0.08, finalGain * 0.3, "sine");
+    }
+  }
+
+  startDrone() {
+    if (!this.enabled || !this.ctx || typeof this.ctx.createOscillator !== "function" || typeof this.ctx.createGain !== "function" || this.droneOsc) return;
+    try {
+      this.droneOsc = this.ctx.createOscillator();
+      this.droneGain = this.ctx.createGain();
+
+      this.droneOsc.type = "sine";
+      this.droneOsc.frequency.setValueAtTime(55, this.ctx.currentTime);
+
+      this.droneGain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+
+      this.droneOsc.connect(this.droneGain).connect(this.ctx.destination);
+      this.droneOsc.start();
+
+      this.updateDroneVolume();
+    } catch (e) {
+      console.warn("Failed to start drone", e);
+    }
+  }
+
+  stopDrone() {
+    if (this.droneOsc) {
+      try {
+        this.droneOsc.stop();
+        this.droneOsc.disconnect();
+      } catch (e) {}
+      this.droneOsc = null;
+    }
+    this.droneGain = null;
+  }
+
+  updateDroneVolume() {
+    if (!this.droneGain || !this.ctx || typeof this.ctx.currentTime === "undefined") return;
+    const masterVol = this.volumes.master ?? 0.7;
+    const systemVol = this.volumes.system ?? 0.7;
+    // Soft drone volume
+    const baseVol = 0.012;
+    const mult = this.droneActive ? 2.5 : 1.0;
+    const finalVol = masterVol * systemVol * baseVol * mult;
+
+    const now = this.ctx.currentTime;
+    this.droneGain.gain.linearRampToValueAtTime(finalVol, now + 0.5);
+
+    const targetFreq = this.droneActive ? 75 : 55;
+    this.droneOsc.frequency.linearRampToValueAtTime(targetFreq, now + 1.0);
+  }
+
+  setDroneIntensity(active) {
+    if (this.droneActive === active) return;
+    this.droneActive = active;
+    this.updateDroneVolume();
+  }
+
   play(type, gainMultiplier = 1.0, details = null) {
     if (!this.enabled || !this.ctx) return;
     if (type === "shoot") {
@@ -275,7 +441,15 @@ export class SoundSystem {
       this.playShoot(details, finalGain);
     } else if (type === "defeat" && details) {
       this.playDefeat(details, finalGain);
-    } else if (type === "place" || type === "upgrade" || type === "sell" || type === "wave" || type === "click" || type === "error") {
+    } else if (type === "place") {
+      if (details) this.playPlace(details, finalGain);
+      else this.playUI("place", finalGain);
+    } else if (type === "upgrade") {
+      if (details) this.playUpgrade(details, finalGain);
+      else this.playUI("upgrade", finalGain);
+    } else if (type === "spawn" && details) {
+      this.playSpawn(details, finalGain);
+    } else if (type === "sell" || type === "wave" || type === "click" || type === "error") {
       this.playUI(type, finalGain);
     } else {
       // Fallback notes arpeggio for victory, defeat, escape, waveClear
@@ -291,6 +465,7 @@ export class SoundSystem {
   }
 
   tone(freq, delay, gain, type) {
+    if (!this.ctx || typeof this.ctx.createOscillator !== "function" || typeof this.ctx.createGain !== "function" || typeof this.ctx.createBiquadFilter !== "function") return;
     const start = this.ctx.currentTime + delay;
     const osc = this.ctx.createOscillator();
     const amp = this.ctx.createGain();

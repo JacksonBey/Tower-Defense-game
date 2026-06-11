@@ -232,7 +232,7 @@ function processEvents(events) {
         sounds.speak("Our defenses are collapsing!");
       }
     } else if (event.type === "spawn") {
-      sounds.play(event.type);
+      sounds.play(event.type, 1.0, event.enemy);
       const creep = ENEMIES[event.enemy];
       if (creep && creep.traits.includes("elite")) {
         sounds.speak("Warning. Elite creep detected.");
@@ -251,9 +251,18 @@ function processEvents(events) {
     } else if (event.type === "waveClear") {
       sounds.play(event.type);
       needsScoreSave = true;
+    } else if (event.type === "place") {
+      sounds.play(event.type, 1.0, event.tower);
+    } else if (event.type === "upgrade") {
+      sounds.play(event.type, 1.0, event.tower);
+    } else if (event.type === "sell") {
+      sounds.play(event.type, 1.0, event.tower);
     } else {
       sounds.play(event.type);
     }
+  }
+  if (sounds.enabled) {
+    sounds.setDroneIntensity(engine.status === "running");
   }
   if (needsScoreSave) {
     saveHighScore(engine.level.id, engine.waveIndex);
@@ -979,12 +988,18 @@ canvas.addEventListener("click", (event) => {
   const existing = engine.towers.findIndex((tower) => tower.x === x && tower.y === y);
   if (existing >= 0) {
     selectedTowerIndex = existing;
+    sounds.play("click", 0.9);
   } else {
-    const result = engine.placeTower(selectedTowerType, x, y);
-    selectedTowerIndex = result.ok ? engine.towers.length - 1 : -1;
-    if (!result.ok) {
-      engine.message = result.reason.toUpperCase();
-      sounds.play("error");
+    if (selectedTowerType) {
+      const result = engine.placeTower(selectedTowerType, x, y);
+      selectedTowerIndex = result.ok ? engine.towers.length - 1 : -1;
+      if (!result.ok) {
+        engine.message = result.reason.toUpperCase();
+        sounds.play("error");
+      }
+    } else {
+      selectedTowerIndex = -1;
+      sounds.play("click", 0.6);
     }
   }
   processEvents(engine.events);

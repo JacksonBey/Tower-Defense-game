@@ -108,10 +108,16 @@ describe("sound system", () => {
     let playShootCalled = null;
     let playDefeatCalled = null;
     let playUICalled = null;
+    let playPlaceCalled = null;
+    let playUpgradeCalled = null;
+    let playSpawnCalled = null;
 
     sounds.playShoot = (type, gain) => { playShootCalled = { type, gain }; };
     sounds.playDefeat = (type, gain) => { playDefeatCalled = { type, gain }; };
     sounds.playUI = (type, gain) => { playUICalled = { type, gain }; };
+    sounds.playPlace = (type, gain) => { playPlaceCalled = { type, gain }; };
+    sounds.playUpgrade = (type, gain) => { playUpgradeCalled = { type, gain }; };
+    sounds.playSpawn = (type, gain) => { playSpawnCalled = { type, gain }; };
 
     sounds.play("shoot", 1.0, "punch");
     expect(playShootCalled.type).toBe("punch");
@@ -124,5 +130,42 @@ describe("sound system", () => {
     sounds.play("place");
     expect(playUICalled.type).toBe("place");
     expect(playUICalled.gain).toBeCloseTo(0.49);
+
+    sounds.play("place", 1.0, "punch");
+    expect(playPlaceCalled.type).toBe("punch");
+    expect(playPlaceCalled.gain).toBeCloseTo(0.49);
+
+    sounds.play("upgrade", 1.0, "radio");
+    expect(playUpgradeCalled.type).toBe("radio");
+    expect(playUpgradeCalled.gain).toBeCloseTo(0.49);
+
+    sounds.play("spawn", 1.0, "vault");
+    expect(playSpawnCalled.type).toBe("vault");
+    expect(playSpawnCalled.gain).toBeCloseTo(0.49);
+  });
+
+  it("handles ambient drone toggles and updates", () => {
+    const sounds = new SoundSystem();
+    sounds.enabled = true;
+    
+    let droneStarted = false;
+    let droneStopped = false;
+    let droneVolumeUpdated = false;
+    
+    sounds.startDrone = () => { droneStarted = true; };
+    sounds.stopDrone = () => { droneStopped = true; };
+    sounds.updateDroneVolume = () => { droneVolumeUpdated = true; };
+    
+    sounds.setDroneIntensity(true);
+    expect(sounds.droneActive).toBe(true);
+    expect(droneVolumeUpdated).toBe(true);
+    
+    // Test state change check
+    droneVolumeUpdated = false;
+    sounds.setDroneIntensity(true);
+    expect(droneVolumeUpdated).toBe(false); // Guard prevents update
+    
+    sounds.disable();
+    expect(droneStopped).toBe(true);
   });
 });
