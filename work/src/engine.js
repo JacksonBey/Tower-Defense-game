@@ -17,6 +17,24 @@ export function distance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+export function hasTrait(enemyOrData, trait) {
+  return (enemyOrData.traits ?? []).includes(trait);
+}
+
+export function summarizeWave(wave, enemyCatalog = ENEMIES) {
+  const counts = {};
+  let totalReward = 0;
+  const traits = new Set();
+  for (const type of wave ?? []) {
+    const enemy = enemyCatalog[type];
+    if (!enemy) continue;
+    counts[type] = (counts[type] ?? 0) + 1;
+    totalReward += enemy.reward;
+    for (const trait of enemy.traits ?? []) traits.add(trait);
+  }
+  return { counts, totalReward, traits: [...traits] };
+}
+
 export class GameEngine {
   constructor(levelId = 1) {
     this.loadLevel(levelId);

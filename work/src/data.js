@@ -16,12 +16,20 @@ export const BUILDABLE = [
   [10, 1], [10, 3], [10, 5], [11, 0], [11, 7]
 ];
 
+export const TRAITS = {
+  swarm: { label: "Swarm", description: "Small bodies arrive cheaply and punish weak coverage." },
+  armored: { label: "Armored", description: "Reduces incoming tower damage." },
+  shielded: { label: "Shielded", description: "Starts with a ward that absorbs damage." },
+  slowResistant: { label: "Slow-Resistant", description: "Shrugs off part of frost control." },
+  elite: { label: "Elite", description: "Costs extra lives if it reaches the exit." }
+};
+
 export const ENEMIES = {
-  chip: { name: "Hollow Imp", hp: 22, speed: 0.92, reward: 9, color: "#d9a441" },
-  bolt: { name: "Mire Brute", hp: 52, speed: 0.55, reward: 18, color: "#8f4f31" },
-  glass: { name: "Wisp Strider", hp: 30, speed: 1.25, reward: 13, color: "#74d6c5" },
-  vault: { name: "Stoneback", hp: 94, speed: 0.38, reward: 31, color: "#7f8b69" },
-  static: { name: "Hex Acolyte", hp: 66, speed: 0.72, reward: 24, color: "#b07acb" }
+  chip: { name: "Hollow Imp", hp: 22, speed: 0.92, reward: 9, color: "#d9a441", traits: ["swarm"] },
+  bolt: { name: "Mire Brute", hp: 52, speed: 0.55, reward: 18, color: "#8f4f31", traits: ["armored"] },
+  glass: { name: "Wisp Strider", hp: 30, speed: 1.25, reward: 13, color: "#74d6c5", traits: ["swarm"] },
+  vault: { name: "Stoneback", hp: 94, speed: 0.38, reward: 31, color: "#7f8b69", traits: ["armored", "slowResistant", "elite"] },
+  static: { name: "Hex Acolyte", hp: 66, speed: 0.72, reward: 24, color: "#b07acb", traits: ["shielded"], shield: 18 }
 };
 
 export const LEVELS = [
