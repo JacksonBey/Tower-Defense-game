@@ -1,0 +1,121 @@
+# Testing Guide
+
+Concrete Panic TD uses Vitest for deterministic rules and Playwright for browser-facing player scenarios.
+
+## Commands
+
+Run from `work/`:
+
+```powershell
+npm run test
+npm run test:e2e
+npm run test:all
+```
+
+`npm run test:all` is the preferred verification command before handing off work. It runs:
+
+1. Unit tests.
+2. Production build.
+3. Playwright E2E tests.
+
+## Unit Tests
+
+Location:
+
+```text
+work/tests/
+```
+
+Current coverage:
+
+* `data.test.js`
+  * Confirms there are exactly 3 levels, 5 enemies, and 4 towers.
+  * Confirms every tower has 2-3 upgrades.
+* `economy.test.js`
+  * Confirms base-7 denomination formatting.
+  * Confirms affordability checks.
+* `engine.test.js`
+  * Confirms path/build-pad legality.
+  * Confirms placement rules and currency charges.
+  * Confirms upgrade order and stat changes.
+  * Confirms wave progression and reward gain.
+  * Confirms loss state when enemies escape.
+  * Confirms sell/refund calculation.
+  * Confirms speed multiplier and pause behavior.
+
+## E2E Tests
+
+Location:
+
+```text
+work/e2e/game.spec.js
+```
+
+Current browser scenarios:
+
+* Initial game content loads.
+* Player can place and upgrade a tower.
+* Player can start a wave and observe combat progression.
+* Player can switch levels and see level-specific money/lives.
+* Invalid placement shows feedback.
+* Player can demolish/sell a tower and see refunded currency.
+* Player can toggle 2x, Pause, and 1x speed states.
+
+## What To Test Next
+
+When adding **wave preview**:
+
+* Unit-test generated preview counts and rewards.
+* E2E-test that preview changes when switching levels and after wave clear.
+
+When adding **enemy traits**:
+
+* Unit-test trait damage modifiers.
+* Unit-test slow resistance, shield depletion, armor, or regeneration.
+* E2E-test that trait labels/icons appear in wave preview.
+
+When adding **branching upgrades**:
+
+* Unit-test mutually exclusive upgrade branches.
+* Unit-test costs and stat effects.
+* E2E-test selecting each branch from the inspection panel.
+
+When adding **per-level geometry**:
+
+* Unit-test every path is continuous.
+* Unit-test every build pad is inside the grid and not on the path.
+* E2E-test that levels visibly use different route/build layouts.
+
+When adding **balance simulations**:
+
+* Use deterministic seeds for endless/procedural cases.
+* Test a small set of known strategies instead of relying on browser tests.
+* Assert broad outcomes: clear, lose, money remaining, lives remaining, and tower mix.
+
+## Test Design Principles
+
+* Keep engine tests fast and deterministic.
+* Keep browser tests focused on player-observable behavior.
+* Use `data-testid` for stable UI selectors.
+* Avoid asserting exact animation timing unless timing is the feature.
+* Do not use Playwright for rules that can be tested directly through `GameEngine`.
+* Do not depend on sound output in automated tests; verify sound controls and event emission instead.
+
+## Manual Verification
+
+For layout, sound, and visual feel, run the dev server and inspect:
+
+```powershell
+npm run dev -- --port 4174
+```
+
+Manual checks:
+
+* Board dominates first viewport.
+* Range preview is visible but does not hide enemies.
+* Floating combat text is legible and disappears quickly.
+* Particles do not obscure the route.
+* Sound toggle works after user interaction.
+* Pause truly freezes combat.
+* 2x speed remains readable.
+* Selling a tower clears inspection and updates currency.
