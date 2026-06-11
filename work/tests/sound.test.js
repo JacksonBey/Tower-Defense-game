@@ -67,4 +67,62 @@ describe("sound system", () => {
     sounds.play("defeat");
     expect(tones).toHaveLength(0);
   });
+
+  it("speaks announcements using Web Speech API", () => {
+    const speakCalls = [];
+    globalThis.window = {
+      speechSynthesis: {
+        cancel: vi.fn(),
+        speak: (utterance) => speakCalls.push(utterance),
+        getVoices: () => [{ name: "Google US English", lang: "en-US" }]
+      }
+    };
+    globalThis.SpeechSynthesisUtterance = class {
+      constructor(text) {
+        this.text = text;
+        this.pitch = 1.0;
+        this.rate = 1.0;
+        this.volume = 1.0;
+      }
+    };
+
+    const sounds = new SoundSystem();
+    sounds.enabled = true;
+    sounds.speak("Hello World");
+
+    expect(window.speechSynthesis.cancel).toHaveBeenCalledOnce();
+    expect(speakCalls).toHaveLength(1);
+    expect(speakCalls[0].text).toBe("Hello World");
+    expect(speakCalls[0].pitch).toBe(0.8);
+    expect(speakCalls[0].rate).toBe(0.85);
+
+    delete globalThis.window;
+    delete globalThis.SpeechSynthesisUtterance;
+  });
+
+  it("triggers custom synthesizers based on tower or enemy types", () => {
+    const sounds = new SoundSystem();
+    sounds.enabled = true;
+    sounds.ctx = {};
+
+    let playShootCalled = null;
+    let playDefeatCalled = null;
+    let playUICalled = null;
+
+    sounds.playShoot = (type, gain) => { playShootCalled = { type, gain }; };
+    sounds.playDefeat = (type, gain) => { playDefeatCalled = { type, gain }; };
+    sounds.playUI = (type, gain) => { playUICalled = { type, gain }; };
+
+    sounds.play("shoot", 1.0, "punch");
+    expect(playShootCalled.type).toBe("punch");
+    expect(playShootCalled.gain).toBeCloseTo(0.49);
+
+    sounds.play("defeat", 1.0, "vault");
+    expect(playDefeatCalled.type).toBe("vault");
+    expect(playDefeatCalled.gain).toBeCloseTo(0.49);
+
+    sounds.play("place");
+    expect(playUICalled.type).toBe("place");
+    expect(playUICalled.gain).toBeCloseTo(0.49);
+  });
 });

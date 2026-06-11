@@ -32,6 +32,17 @@ let hoveredCell = null;
 let floatingTexts = [];
 let particles = [];
 let shakeTimer = 0;
+let firstAnnounce = false;
+
+function announceLevel(levelId) {
+  if (levelId === 1) {
+    sounds.speak("Briar Glen. Raise towers. Hold the lane.");
+  } else if (levelId === 2) {
+    sounds.speak("Mossgate Ford. Secure the crossing.");
+  } else if (levelId === 3) {
+    sounds.speak("Elderfen Crossing. The final stand.");
+  }
+}
 
 app.innerHTML = `
   <main class="shell">
@@ -205,18 +216,43 @@ function drawParticles() {
 function processEvents(events) {
   let needsScoreSave = false;
   for (const event of events) {
-    sounds.play(event.type);
     if (event.type === "shoot") {
+      sounds.play(event.type, 1.0, event.tower);
       const text = event.damage > 0 ? `-${event.damage}` : "Ward";
       addFloatingText(event.targetX, event.targetY - 0.2, text, event.damage > 0 ? "#f35f5f" : "#78c7e8");
       addExplosion(event.targetX, event.targetY, "#111827", 3);
     } else if (event.type === "defeat") {
+      sounds.play(event.type, 1.0, event.enemy);
       addFloatingText(event.x, event.y - 0.4, `+${formatMoney(event.reward)}`, "#ea580c");
       addExplosion(event.x, event.y, ENEMIES[event.enemy].color, 10);
     } else if (event.type === "escape") {
+      sounds.play(event.type);
       shakeTimer = 0.35;
-    } else if (event.type === "waveClear" || event.type === "won" || event.type === "lost") {
+      if (engine.lives > 0 && engine.lives <= 2) {
+        sounds.speak("Our defenses are collapsing!");
+      }
+    } else if (event.type === "spawn") {
+      sounds.play(event.type);
+      const creep = ENEMIES[event.enemy];
+      if (creep && creep.traits.includes("elite")) {
+        sounds.speak("Warning. Elite creep detected.");
+      }
+    } else if (event.type === "wave") {
+      sounds.play(event.type);
+      sounds.speak(`Wave ${engine.waveIndex + 1} approaches!`);
+    } else if (event.type === "won") {
+      sounds.play(event.type);
+      sounds.speak("Runehold stands victorious!");
       needsScoreSave = true;
+    } else if (event.type === "lost") {
+      sounds.play(event.type);
+      sounds.speak("Defeat. The hold has fallen.");
+      needsScoreSave = true;
+    } else if (event.type === "waveClear") {
+      sounds.play(event.type);
+      needsScoreSave = true;
+    } else {
+      sounds.play(event.type);
     }
   }
   if (needsScoreSave) {
@@ -862,6 +898,10 @@ app.addEventListener("click", (event) => {
   if (sounds.enabled && !sounds.ctx) {
     sounds.enable(false);
   }
+  if (!firstAnnounce && sounds.enabled) {
+    firstAnnounce = true;
+    announceLevel(engine.level.id);
+  }
 
   const level = event.target.closest("[data-level]");
   const tower = event.target.closest("[data-tower]");
@@ -872,11 +912,16 @@ app.addEventListener("click", (event) => {
     selectedTowerIndex = -1;
     inspectKey = "";
     renderControls();
+    announceLevel(engine.level.id);
   } else if (tower) {
     selectedTowerType = tower.dataset.tower;
+    sounds.play("click", 1.2);
     renderControls();
   } else if (speedBtn) {
     engine.speedMultiplier = Number(speedBtn.dataset.speed);
+    // Play pitch-scaled click for speed adjustment
+    const mult = engine.speedMultiplier === 1 ? 1.0 : engine.speedMultiplier === 2 ? 1.4 : 0.8;
+    sounds.play("click", mult);
   } else if (event.target.matches("[data-testid='start-wave']")) {
     engine.startWave();
   } else if (event.target.matches("[data-testid='reset-level']")) {
@@ -885,6 +930,7 @@ app.addEventListener("click", (event) => {
     engine.endlessMode = prevEndless;
     selectedTowerIndex = -1;
     inspectKey = "";
+    announceLevel(engine.level.id);
   } else if (event.target.matches("[data-testid='upgrade-tower']")) {
     engine.upgradeTower(selectedTowerIndex, Number(event.target.dataset.upgradeChoice ?? 0));
   } else if (event.target.closest("[data-upgrade-choice]")) {
@@ -899,6 +945,10 @@ app.addEventListener("click", (event) => {
   } else if (event.target.matches("[data-testid='sound-toggle']")) {
     const enabled = sounds.toggle();
     event.target.textContent = enabled ? "Sound On" : "Sound Off";
+    if (enabled) {
+      firstAnnounce = true;
+      announceLevel(engine.level.id);
+    }
   }
   processEvents(engine.events);
   refresh();
@@ -932,7 +982,10 @@ canvas.addEventListener("click", (event) => {
   } else {
     const result = engine.placeTower(selectedTowerType, x, y);
     selectedTowerIndex = result.ok ? engine.towers.length - 1 : -1;
-    if (!result.ok) engine.message = result.reason.toUpperCase();
+    if (!result.ok) {
+      engine.message = result.reason.toUpperCase();
+      sounds.play("error");
+    }
   }
   processEvents(engine.events);
   refresh();
