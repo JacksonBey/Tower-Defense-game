@@ -26,7 +26,10 @@ const CHANNEL_MAP = {
   waveClear: "system",
   won: "system",
   click: "build",
-  error: "build"
+  error: "build",
+  select: "build",
+  levelSelect: "system",
+  resetLevel: "system"
 };
 
 export class SoundSystem {
@@ -318,6 +321,52 @@ export class SoundSystem {
     }
   }
 
+  playSell(towerType, finalGain) {
+    // Play gold coins salvage chime first (system UI feel)
+    this.toneSweep(988, 1318, 0.06, finalGain * 0.4, "sine");
+    this.toneSweep(1318, 1568, 0.08, finalGain * 0.4, "sine", 0.05);
+    this.playNoise(0.1, finalGain * 0.3, "highpass", 2000, 5000);
+    
+    // Play structural deconstruction sound per tower type
+    if (towerType === "punch") {
+      this.playNoise(0.25, finalGain * 0.6, "lowpass", 300, 50);
+    } else if (towerType === "radio") {
+      this.playNoise(0.2, finalGain * 0.5, "highpass", 2500, 1000);
+      this.toneSweep(1200, 400, 0.15, finalGain * 0.3, "sine");
+    } else if (towerType === "tax") {
+      this.playNoise(0.15, finalGain * 0.5, "bandpass", 600, 200);
+    } else if (towerType === "freezer") {
+      this.playNoise(0.22, finalGain * 0.6, "highpass", 1800, 800);
+    }
+  }
+
+  playSelect(towerType, finalGain) {
+    // Play a standard menu click + a quiet preview of the tower's nature
+    this.playUI("click", finalGain * 0.7);
+    if (towerType === "punch") {
+      this.toneSweep(120, 90, 0.1, finalGain * 0.5, "sine");
+    } else if (towerType === "radio") {
+      this.toneSweep(800, 1200, 0.1, finalGain * 0.3, "sine");
+    } else if (towerType === "tax") {
+      this.toneSweep(300, 180, 0.08, finalGain * 0.4, "triangle");
+    } else if (towerType === "freezer") {
+      this.playNoise(0.12, finalGain * 0.4, "bandpass", 1500, 1000);
+    }
+  }
+
+  playLevelSelect(finalGain) {
+    // A beautiful rising sweep arpeggio
+    this.toneSweep(330, 440, 0.15, finalGain * 0.5, "sine");
+    this.toneSweep(440, 550, 0.15, finalGain * 0.5, "sine", 0.05);
+    this.toneSweep(550, 660, 0.2, finalGain * 0.6, "sine", 0.1);
+  }
+
+  playResetLevel(finalGain) {
+    // A falling sweep representing restart
+    this.toneSweep(440, 220, 0.2, finalGain * 0.6, "triangle");
+    this.playNoise(0.15, finalGain * 0.4, "lowpass", 400, 100);
+  }
+
   playUI(actionType, finalGain) {
     if (actionType === "place") {
       // Stone locking-in place
@@ -449,7 +498,16 @@ export class SoundSystem {
       else this.playUI("upgrade", finalGain);
     } else if (type === "spawn" && details) {
       this.playSpawn(details, finalGain);
-    } else if (type === "sell" || type === "wave" || type === "click" || type === "error") {
+    } else if (type === "sell") {
+      if (details) this.playSell(details, finalGain);
+      else this.playUI("sell", finalGain);
+    } else if (type === "select" && details) {
+      this.playSelect(details, finalGain);
+    } else if (type === "levelSelect") {
+      this.playLevelSelect(finalGain);
+    } else if (type === "resetLevel") {
+      this.playResetLevel(finalGain);
+    } else if (type === "wave" || type === "click" || type === "error") {
       this.playUI(type, finalGain);
     } else {
       // Fallback notes arpeggio for victory, defeat, escape, waveClear

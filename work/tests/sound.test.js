@@ -111,6 +111,10 @@ describe("sound system", () => {
     let playPlaceCalled = null;
     let playUpgradeCalled = null;
     let playSpawnCalled = null;
+    let playSellCalled = null;
+    let playSelectCalled = null;
+    let playLevelSelectCalled = false;
+    let playResetLevelCalled = false;
 
     sounds.playShoot = (type, gain) => { playShootCalled = { type, gain }; };
     sounds.playDefeat = (type, gain) => { playDefeatCalled = { type, gain }; };
@@ -118,6 +122,10 @@ describe("sound system", () => {
     sounds.playPlace = (type, gain) => { playPlaceCalled = { type, gain }; };
     sounds.playUpgrade = (type, gain) => { playUpgradeCalled = { type, gain }; };
     sounds.playSpawn = (type, gain) => { playSpawnCalled = { type, gain }; };
+    sounds.playSell = (type, gain) => { playSellCalled = { type, gain }; };
+    sounds.playSelect = (type, gain) => { playSelectCalled = { type, gain }; };
+    sounds.playLevelSelect = (gain) => { playLevelSelectCalled = true; };
+    sounds.playResetLevel = (gain) => { playResetLevelCalled = true; };
 
     sounds.play("shoot", 1.0, "punch");
     expect(playShootCalled.type).toBe("punch");
@@ -142,6 +150,20 @@ describe("sound system", () => {
     sounds.play("spawn", 1.0, "vault");
     expect(playSpawnCalled.type).toBe("vault");
     expect(playSpawnCalled.gain).toBeCloseTo(0.49);
+
+    sounds.play("sell", 1.0, "tax");
+    expect(playSellCalled.type).toBe("tax");
+    expect(playSellCalled.gain).toBeCloseTo(0.49);
+
+    sounds.play("select", 1.0, "freezer");
+    expect(playSelectCalled.type).toBe("freezer");
+    expect(playSelectCalled.gain).toBeCloseTo(0.49);
+
+    sounds.play("levelSelect");
+    expect(playLevelSelectCalled).toBe(true);
+
+    sounds.play("resetLevel");
+    expect(playResetLevelCalled).toBe(true);
   });
 
   it("handles ambient drone toggles and updates", () => {

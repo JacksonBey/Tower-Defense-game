@@ -920,11 +920,12 @@ app.addEventListener("click", (event) => {
     engine.loadLevel(Number(level.dataset.level));
     selectedTowerIndex = -1;
     inspectKey = "";
+    sounds.play("levelSelect");
     renderControls();
     announceLevel(engine.level.id);
   } else if (tower) {
     selectedTowerType = tower.dataset.tower;
-    sounds.play("click", 1.2);
+    sounds.play("select", 1.2, selectedTowerType);
     renderControls();
   } else if (speedBtn) {
     engine.speedMultiplier = Number(speedBtn.dataset.speed);
@@ -939,6 +940,7 @@ app.addEventListener("click", (event) => {
     engine.endlessMode = prevEndless;
     selectedTowerIndex = -1;
     inspectKey = "";
+    sounds.play("resetLevel");
     announceLevel(engine.level.id);
   } else if (event.target.matches("[data-testid='upgrade-tower']")) {
     engine.upgradeTower(selectedTowerIndex, Number(event.target.dataset.upgradeChoice ?? 0));
@@ -966,6 +968,7 @@ app.addEventListener("click", (event) => {
 app.addEventListener("change", (event) => {
   if (event.target.matches("[data-testid='endless-toggle']")) {
     engine.endlessMode = event.target.checked;
+    sounds.play("click", 0.8);
     refresh();
   }
 });
