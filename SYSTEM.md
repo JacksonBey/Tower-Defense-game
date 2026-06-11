@@ -88,7 +88,7 @@ Contains deterministic gameplay rules:
 * Wave start and enemy spawning.
 * Enemy motion along the path.
 * Tower target selection and projectile bookkeeping.
-* Damage, armor, shields, slow resistance, defeat rewards, elite escapes, lives, win/loss.
+* Damage, armor pierce, shield breaker, slow resistance bypass, hunter's marks, executions, shatter damage, multishot, splash damage, chain lightning, defeat rewards, elite escapes, lives, win/loss.
 * Speed scaling through `speedMultiplier`.
 * Endless mode continuation after authored waves.
 * Next-wave summaries through `previewWave()` and `summarizeWave()`.

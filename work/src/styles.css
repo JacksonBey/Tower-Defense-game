@@ -159,18 +159,29 @@ p {
   margin-bottom: 9px;
 }
 
-.level-list button,
-.tower-list button {
+.level-list button {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
   gap: 6px;
   align-items: center;
   text-align: left;
   padding: 7px;
 }
 
-.level-list button {
-  grid-template-columns: 1fr;
+.tower-list button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
+  padding: 7px;
+}
+
+.tower-btn-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
 .highscore {
@@ -204,23 +215,53 @@ p {
 
 .preview-row {
   display: grid;
-  grid-template-columns: 16px 1fr auto;
-  gap: 6px;
+  grid-template-columns: 20px 1fr auto;
+  gap: 8px;
   align-items: center;
   color: #f7dfad;
   font-size: 10px;
   font-weight: 800;
 }
 
-.preview-row i {
-  width: 14px;
-  height: 14px;
-  border: 2px solid #120c08;
-  border-radius: 50%;
+.preview-row svg,
+.enemy-row svg {
+  display: block;
+  width: 20px;
+  height: 20px;
 }
 
 .preview-row b {
   color: #ffe7a0;
+}
+
+.threat-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  border: 1px solid rgba(18, 12, 8, 0.4);
+}
+
+.threat-low {
+  background: linear-gradient(#b7d7c3, #6c9a77);
+  color: #10200f;
+}
+
+.threat-mod {
+  background: linear-gradient(#eddaa7, #c09b5a);
+  color: #1d120a;
+}
+
+.threat-high {
+  background: linear-gradient(#fca5a5, #ef4444);
+  color: #ffffff;
+}
+
+.threat-deadly {
+  background: linear-gradient(#d8b4fe, #a855f7);
+  color: #ffffff;
 }
 
 .trait-list,
@@ -358,8 +399,8 @@ canvas {
 
 .enemy-row {
   display: grid;
-  grid-template-columns: 18px 1fr auto;
-  gap: 6px;
+  grid-template-columns: 20px 1fr auto;
+  gap: 8px;
   align-items: center;
   border: 1px solid #120c08;
   border-radius: 3px;
@@ -372,14 +413,6 @@ canvas {
 
 .enemy-row small {
   margin-top: 4px;
-}
-
-.enemy-row i {
-  display: block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #120c08;
-  border-radius: 50%;
 }
 
 .speed-group {

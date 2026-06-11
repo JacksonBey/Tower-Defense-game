@@ -75,12 +75,12 @@ export const TOWERS = {
     color: "#6f5138",
     upgrades: [
       [
-        { id: "oath-stones", name: "Oath Stones", cost: 35, damage: 12, summary: "+12 damage" },
-        { id: "watchfire", name: "Watchfire", cost: 35, range: 0.35, cooldown: -0.04, summary: "+0.4 range, faster" }
+        { id: "oath-stones", name: "Oath Stones", cost: 35, damage: 12, bonusVsArmored: 12, summary: "+12 damage (+24 vs Armored)" },
+        { id: "watchfire", name: "Watchfire", cost: 35, range: 0.35, cooldown: -0.04, bonusVsSwarm: 6, summary: "+0.4 range, faster (+6 vs Swarm)" }
       ],
       [
-        { id: "twin-watch", name: "Twin Watch", cost: 56, cooldown: -0.16, summary: "Much faster attacks" },
-        { id: "crag-hammer", name: "Crag Hammer", cost: 56, damage: 18, summary: "+18 damage" }
+        { id: "twin-watch", name: "Twin Watch", cost: 56, cooldown: -0.16, multishot: 2, summary: "Much faster (targets 2 creeps)" },
+        { id: "crag-hammer", name: "Crag Hammer", cost: 56, damage: 18, splashRadius: 1.0, summary: "+18 damage, deals 50% splash" }
       ]
     ]
   },
@@ -93,16 +93,16 @@ export const TOWERS = {
     color: "#386fb0",
     upgrades: [
       [
-        { id: "rune-lens", name: "Rune Lens", cost: 28, range: 0.45, summary: "+0.5 range" },
-        { id: "blue-spark", name: "Blue Spark", cost: 28, damage: 4, summary: "+4 damage" }
+        { id: "rune-lens", name: "Rune Lens", cost: 28, range: 0.45, shieldBreaker: true, summary: "+0.5 range, double shield shred" },
+        { id: "blue-spark", name: "Blue Spark", cost: 28, damage: 4, chainTargets: 2, summary: "+4 damage, bounces to 2 targets" }
       ],
       [
-        { id: "storm-choir", name: "Storm Choir", cost: 63, damage: 7, summary: "+7 damage" },
-        { id: "wide-sigil", name: "Wide Sigil", cost: 63, range: 0.65, summary: "+0.7 range" }
+        { id: "storm-choir", name: "Storm Choir", cost: 63, damage: 7, chainTargets: 3, bonusVsShielded: 12, summary: "+7 damage, bounces 3, +12 vs Shield" },
+        { id: "wide-sigil", name: "Wide Sigil", cost: 63, range: 0.65, executePercent: 0.20, summary: "+0.7 range, executes below 20% HP" }
       ],
       [
         { id: "quickened-glyph", name: "Quickened Glyph", cost: 84, cooldown: -0.08, summary: "Faster casting" },
-        { id: "deep-focus", name: "Deep Focus", cost: 84, damage: 10, cooldown: 0.08, summary: "+10 damage, slower" }
+        { id: "deep-focus", name: "Deep Focus", cost: 84, damage: 10, cooldown: 0.08, bonusVsElite: 30, summary: "+10 damage, slower (+30 vs Elite)" }
       ]
     ]
   },
@@ -115,12 +115,12 @@ export const TOWERS = {
     color: "#a85c2a",
     upgrades: [
       [
-        { id: "hunters-mark", name: "Hunter's Mark", cost: 42, damage: 18, summary: "+18 damage" },
-        { id: "rangefinder", name: "Rangefinder", cost: 42, range: 0.45, cooldown: -0.08, summary: "+0.5 range, faster" }
+        { id: "hunters-mark", name: "Hunter's Mark", cost: 42, damage: 18, appliesMark: true, summary: "+18 damage, marks targets (+30% dmg)" },
+        { id: "rangefinder", name: "Rangefinder", cost: 42, range: 0.45, cooldown: -0.08, bountyBonus: 5, summary: "+0.5 range, faster, +5 Gold on kill" }
       ],
       [
         { id: "longbow-winch", name: "Longbow Winch", cost: 70, range: 0.65, summary: "+0.7 range" },
-        { id: "siege-bolt", name: "Siege Bolt", cost: 70, damage: 26, cooldown: 0.18, summary: "+26 damage, slower" }
+        { id: "siege-bolt", name: "Siege Bolt", cost: 70, damage: 26, cooldown: 0.18, bonusVsElite: 50, armorPierce: true, summary: "+26 dmg, slower (pierces armor, +50 vs Elite)" }
       ]
     ]
   },
@@ -138,11 +138,11 @@ export const TOWERS = {
         { id: "cold-reach", name: "Cold Reach", cost: 49, range: 0.45, summary: "+0.5 range" }
       ],
       [
-        { id: "rime-shards", name: "Rime Shards", cost: 77, damage: 10, summary: "+10 damage" },
-        { id: "deep-freeze", name: "Deep Freeze", cost: 77, slow: 0.2, cooldown: 0.08, summary: "Stronger slow, slower" }
+        { id: "rime-shards", name: "Rime Shards", cost: 77, damage: 10, shatterDamage: 15, summary: "+10 damage (+25 vs slowed)" },
+        { id: "deep-freeze", name: "Deep Freeze", cost: 77, slow: 0.2, cooldown: 0.08, bypassSlowResistance: true, summary: "Stronger slow, slower (ignores immunity)" }
       ],
       [
-        { id: "glacier-crown", name: "Glacier Crown", cost: 98, range: 0.55, summary: "+0.6 range" },
+        { id: "glacier-crown", name: "Glacier Crown", cost: 98, range: 0.55, aoeSlowRadius: 1.2, summary: "+0.6 range, slows adjacent creeps" },
         { id: "ice-heart", name: "Ice Heart", cost: 98, damage: 16, slow: 0.08, summary: "+16 damage, more slow" }
       ]
     ]

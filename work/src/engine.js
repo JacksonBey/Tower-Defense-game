@@ -177,29 +177,76 @@ export class GameEngine {
       hp: data.hp,
       maxHp: data.hp,
       shield: data.shield ?? 0,
+      reward: data.reward,
       traits: [...(data.traits ?? [])],
       progress: 0,
       slowTimer: 0,
-      slowFactor: 0
+      slowFactor: 0,
+      markedTimer: 0
     });
     this.events.push({ type: "spawn", enemy: type });
   }
 
   previewWave(index = this.waveIndex) {
+    while (index >= this.level.waves.length) {
+      this.generateEndlessWave(this.level.waves.length);
+    }
     return summarizeWave(this.level.waves[index], ENEMIES);
   }
 
   applyTowerDamage(tower, target) {
     let damage = tower.stats.damage;
-    if (hasTrait(target, "armored")) {
+
+    // 1. Hunter's Mark modifier
+    if (target.markedTimer > 0) {
+      damage = Math.ceil(damage * 1.3);
+    }
+
+    // 2. Trait bonuses
+    if (hasTrait(target, "armored") && tower.stats.bonusVsArmored) {
+      damage += tower.stats.bonusVsArmored;
+    }
+    if (hasTrait(target, "swarm") && tower.stats.bonusVsSwarm) {
+      damage += tower.stats.bonusVsSwarm;
+    }
+    if (target.shield > 0 && tower.stats.bonusVsShielded) {
+      damage += tower.stats.bonusVsShielded;
+    }
+    if (hasTrait(target, "elite") && tower.stats.bonusVsElite) {
+      damage += tower.stats.bonusVsElite;
+    }
+
+    // 3. Shatter bonus
+    if (target.slowTimer > 0 && tower.stats.shatterDamage) {
+      damage += tower.stats.shatterDamage;
+    }
+
+    // 4. Execute modifier
+    if (tower.stats.executePercent && (target.hp / target.maxHp) <= tower.stats.executePercent) {
+      damage = Math.ceil(damage * 1.5);
+    }
+
+    // 5. Armor reduction
+    if (hasTrait(target, "armored") && !tower.stats.armorPierce) {
       damage = Math.max(1, Math.ceil(damage * 0.65));
     }
+
+    // 6. Shield absorption
     const shieldBefore = target.shield ?? 0;
     if (shieldBefore > 0) {
-      const absorbed = Math.min(shieldBefore, damage);
+      let shieldDamage = damage;
+      if (tower.stats.shieldBreaker) {
+        shieldDamage *= 2;
+      }
+      const absorbed = Math.min(shieldBefore, shieldDamage);
       target.shield -= absorbed;
-      damage -= absorbed;
+      if (tower.stats.shieldBreaker) {
+        damage -= Math.ceil(absorbed / 2);
+      } else {
+        damage -= absorbed;
+      }
     }
+
     target.hp -= damage;
     return { damage, absorbed: shieldBefore - (target.shield ?? 0) };
   }
@@ -222,6 +269,7 @@ export class GameEngine {
       const speed = ENEMIES[enemy.type].speed * (enemy.slowTimer > 0 ? 1 - enemy.slowFactor : 1);
       enemy.progress += speed * adjustedDt;
       enemy.slowTimer = Math.max(0, enemy.slowTimer - adjustedDt);
+      enemy.markedTimer = Math.max(0, enemy.markedTimer - adjustedDt);
     }
 
     const escaped = this.enemies.filter((enemy) => enemy.progress >= PATH.length - 1);
@@ -236,26 +284,98 @@ export class GameEngine {
       tower.cooldownLeft -= adjustedDt;
       if (tower.cooldownLeft > 0) continue;
       const origin = { x: tower.x + 0.5, y: tower.y + 0.5 };
-      const target = this.enemies
+      const targetsInRange = this.enemies
         .map((enemy) => ({ enemy, dist: distance(origin, this.enemyCenter(enemy)) }))
         .filter((item) => item.dist <= tower.stats.range)
-        .sort((a, b) => b.enemy.progress - a.enemy.progress)[0]?.enemy;
-      if (!target) continue;
-      const targetPos = this.enemyCenter(target);
-      const hit = this.applyTowerDamage(tower, target);
-      if (tower.stats.slow) {
-        const resistance = hasTrait(target, "slowResistant") ? 0.45 : 1;
-        target.slowTimer = 1.1;
-        target.slowFactor = Math.max(target.slowFactor, tower.stats.slow * resistance);
+        .sort((a, b) => b.enemy.progress - a.enemy.progress);
+
+      if (targetsInRange.length === 0) continue;
+
+      const multishotCount = tower.stats.multishot ?? 1;
+      const chosenTargets = targetsInRange.slice(0, multishotCount).map((item) => item.enemy);
+
+      for (const target of chosenTargets) {
+        const targetPos = this.enemyCenter(target);
+
+        // Apply Hunter's Mark
+        if (tower.stats.appliesMark) {
+          target.markedTimer = 3.0;
+        }
+
+        // Apply Bounty Bonus
+        if (tower.stats.bountyBonus && !target.bountyAdded) {
+          target.bountyAdded = true;
+          target.reward += tower.stats.bountyBonus;
+        }
+
+        const hit = this.applyTowerDamage(tower, target);
+
+        // Apply Slow / Control
+        if (tower.stats.slow) {
+          const applySlow = (t) => {
+            const hasResistance = hasTrait(t, "slowResistant") && !tower.stats.bypassSlowResistance;
+            const resistance = hasResistance ? 0.45 : 1;
+            t.slowTimer = 1.1;
+            t.slowFactor = Math.max(t.slowFactor, tower.stats.slow * resistance);
+          };
+          applySlow(target);
+
+          if (tower.stats.aoeSlowRadius) {
+            const targetPosOther = this.enemyCenter(target);
+            for (const other of this.enemies) {
+              if (other.id === target.id) continue;
+              const otherPos = this.enemyCenter(other);
+              if (distance(targetPosOther, otherPos) <= tower.stats.aoeSlowRadius) {
+                applySlow(other);
+              }
+            }
+          }
+        }
+
+        // Apply Splash / AoE
+        if (tower.stats.splashRadius) {
+          for (const other of this.enemies) {
+            if (other.id === target.id) continue;
+            const otherPos = this.enemyCenter(other);
+            if (distance(targetPos, otherPos) <= tower.stats.splashRadius) {
+              this.applyTowerDamage({ stats: { damage: Math.ceil(tower.stats.damage * 0.5) } }, other);
+            }
+          }
+        }
+
+        // Apply Chain Lightning
+        if (tower.stats.chainTargets) {
+          let current = target;
+          let chainCount = tower.stats.chainTargets;
+          let chainDamage = tower.stats.damage;
+          const hitEnemies = new Set([current.id]);
+          while (chainCount > 0) {
+            chainDamage = Math.ceil(chainDamage * 0.65);
+            const currentPos = this.enemyCenter(current);
+            const nextTarget = this.enemies
+              .filter((e) => !hitEnemies.has(e.id))
+              .map((e) => ({ enemy: e, dist: distance(currentPos, this.enemyCenter(e)) }))
+              .filter((item) => item.dist <= 1.5)
+              .sort((a, b) => a.dist - b.dist)[0]?.enemy;
+            if (!nextTarget) break;
+            current = nextTarget;
+            hitEnemies.add(current.id);
+            this.applyTowerDamage({ stats: { damage: chainDamage } }, current);
+            this.projectiles.push({ from: currentPos, to: this.enemyCenter(current), life: 0.15, color: "#74d6c5" });
+            chainCount--;
+          }
+        }
+
+        this.projectiles.push({ from: origin, to: targetPos, life: 0.18, color: tower.stats.color });
+        this.events.push({ type: "shoot", tower: tower.type, targetX: targetPos.x, targetY: targetPos.y, damage: hit.damage, absorbed: hit.absorbed });
       }
-      this.projectiles.push({ from: origin, to: targetPos, life: 0.18, color: tower.stats.color });
-      this.events.push({ type: "shoot", tower: tower.type, targetX: targetPos.x, targetY: targetPos.y, damage: hit.damage, absorbed: hit.absorbed });
+
       tower.cooldownLeft = tower.stats.cooldown;
     }
 
     for (const enemy of this.enemies.filter((enemy) => enemy.hp <= 0)) {
       const pos = this.enemyCenter(enemy);
-      const reward = ENEMIES[enemy.type].reward;
+      const reward = enemy.reward;
       this.money += reward;
       this.events.push({ type: "defeat", enemy: enemy.type, x: pos.x, y: pos.y, reward });
     }

@@ -125,4 +125,54 @@ describe("engine", () => {
     expect(game.lives).toBe(7);
     expect(game.events).toContainEqual({ type: "escape", count: 1, livesLost: 2 });
   });
+
+  it("handles custom branching upgrade combat effects correctly", () => {
+    const game = new GameEngine(1);
+
+    // 1. Shield Breaker (rune-lens)
+    const target1 = { hp: 50, maxHp: 50, shield: 15, traits: [] };
+    const hit1 = game.applyTowerDamage({ stats: { damage: 10, shieldBreaker: true } }, target1);
+    expect(hit1.absorbed).toBe(15);
+    expect(target1.hp).toBe(48);
+
+    // 2. Hunter's Mark (appliesMark + markedTimer modifier)
+    const target2 = { hp: 50, maxHp: 50, shield: 0, traits: [], markedTimer: 2.0 };
+    const hit2 = game.applyTowerDamage({ stats: { damage: 10 } }, target2);
+    expect(hit2.damage).toBe(13);
+    expect(target2.hp).toBe(37);
+
+    // 3. Executioner (executePercent)
+    const target3 = { hp: 5, maxHp: 50, shield: 0, traits: [] };
+    const hit3 = game.applyTowerDamage({ stats: { damage: 10, executePercent: 0.2 } }, target3);
+    expect(hit3.damage).toBe(15);
+    expect(target3.hp).toBe(-10);
+
+    // 4. Shatter (shatterDamage vs slowed target)
+    const target4 = { hp: 50, maxHp: 50, shield: 0, traits: [], slowTimer: 1.0 };
+    const hit4 = game.applyTowerDamage({ stats: { damage: 10, shatterDamage: 15 } }, target4);
+    expect(hit4.damage).toBe(25);
+    expect(target4.hp).toBe(25);
+  });
+
+  it("implements multishot, splash, and chain lightning in simulation tick", () => {
+    const game = new GameEngine(1);
+    game.status = "running";
+    game.towers = [{
+      id: "t1",
+      type: "punch",
+      x: 1,
+      y: 0,
+      level: 2,
+      cooldownLeft: 0,
+      stats: { damage: 10, range: 3, cooldown: 0.5, multishot: 2, color: "#6f5138" }
+    }];
+    game.enemies = [
+      { id: "e1", type: "chip", hp: 20, maxHp: 20, progress: 1.5, slowTimer: 0, slowFactor: 0 },
+      { id: "e2", type: "chip", hp: 20, maxHp: 20, progress: 1.2, slowTimer: 0, slowFactor: 0 }
+    ];
+    game.tick(0.1);
+    expect(game.enemies[0].hp).toBe(10);
+    expect(game.enemies[1].hp).toBe(10);
+    expect(game.events.filter(e => e.type === "shoot")).toHaveLength(2);
+  });
 });

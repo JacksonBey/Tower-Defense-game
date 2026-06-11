@@ -4,11 +4,8 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Now
 
-- `[ ]` Move path and build pads into per-level configuration so each level has distinct geometry.
-- `[ ]` Add deterministic balance simulation tests for at least three viable build strategies.
-- `[/]` Improve the new fantasy silhouettes at small sizes, especially tower list icons and in-combat overlap readability. (In progress by Gemini)
-- `[/]` Improve next-wave preview with creep silhouette icons, threat ratings, and generated endless-wave preview behavior. (In progress by Gemini)
-- `[/]` Tune branching upgrade choices so each branch clearly counters different traits or wave shapes. (In progress by Gemini)
+- [ ] Move path and build pads into per-level configuration so each level has distinct geometry.
+- [/] Add deterministic balance simulation tests for at least three viable build strategies. (In progress by Gemini)
 
 ## Next
 
@@ -30,7 +27,10 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Completed Work
 
-- `[x]` Created initial 3-level, 5-enemy, 4-tower tower defense prototype.
+- [x] Improved the new fantasy silhouettes at small sizes, adding tower list icons, semi-transparent base shadows, aura/bubble overlays, and progress-sorted rendering order (June 11, 2026).
+- [x] Improved next-wave preview with SVG creep silhouettes, dynamic threat ratings (Low, Moderate, High, Deadly), and auto-generation for endless-mode previews (June 11, 2026).
+- [x] Tuned branching upgrade choices to implement deep tactical counters (Multi-shot, Splash, Chain Lightning, Shield Breaker, Hunter's Mark, Armor Pierce, Shatter, Slow Resistance Bypass) with full unit test coverage (June 11, 2026).
+- [x] Created initial 3-level, 5-enemy, 4-tower tower defense prototype.
 - `[x]` Added base-7 currency denominations: Crowns, Slabs, Bolts.
 - `[x]` Added canvas rendering for grid, path, towers, enemies, projectiles, and HUD state.
 - `[x]` Added Web Audio synthesized sound cues with a Sound On/Off toggle.

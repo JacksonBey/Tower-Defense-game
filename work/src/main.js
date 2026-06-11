@@ -190,6 +190,108 @@ function processEvents(events) {
   }
 }
 
+function getEnemySvg(type, color = ENEMIES[type]?.color) {
+  if (type === "chip") {
+    return `
+      <svg class="creep-icon" width="20" height="20" viewBox="-20 -20 40 40">
+        <circle cx="0" cy="2" r="13" fill="${color}" stroke="#120c08" stroke-width="3"/>
+        <path d="M -8 -9 L -4 -22 L 1 -8 M 8 -9 L 4 -22 L -1 -8" fill="none" stroke="#120c08" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    `;
+  } else if (type === "bolt") {
+    return `
+      <svg class="creep-icon" width="20" height="20" viewBox="-20 -20 40 40">
+        <path d="M -18 15 L -14 -7 L 0 -20 L 14 -7 L 18 15 Z" fill="${color}" stroke="#120c08" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="-8" y="-2" width="16" height="7" fill="#3d291c" rx="1"/>
+      </svg>
+    `;
+  } else if (type === "glass") {
+    return `
+      <svg class="creep-icon" width="20" height="20" viewBox="-20 -20 40 40">
+        <ellipse cx="0" cy="0" rx="12" ry="20" transform="rotate(20)" fill="${color}" stroke="#120c08" stroke-width="3"/>
+        <path d="M -15 8 L 15 -12 M -8 16 L 13 2" fill="none" stroke="#e8ffff" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    `;
+  } else if (type === "vault") {
+    return `
+      <svg class="creep-icon" width="20" height="20" viewBox="-20 -20 40 40">
+        <ellipse cx="0" cy="4" rx="20" ry="14" fill="${color}" stroke="#120c08" stroke-width="3"/>
+        <circle cx="-8" cy="-4" r="7" fill="#d1c8a8" stroke="#120c08" stroke-width="3"/>
+        <circle cx="7" cy="-5" r="8" fill="#d1c8a8" stroke="#120c08" stroke-width="3"/>
+      </svg>
+    `;
+  } else {
+    return `
+      <svg class="creep-icon" width="20" height="20" viewBox="-20 -20 40 40">
+        <path d="M 0 -21 L 16 -4 L 10 18 L -10 18 L -16 -4 Z" fill="${color}" stroke="#120c08" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="0" cy="0" r="6" fill="#f6e3a4" stroke="#120c08" stroke-width="2"/>
+      </svg>
+    `;
+  }
+}
+
+function getTowerSvg(type, color = TOWERS[type]?.color) {
+  if (type === "punch") {
+    return `
+      <svg class="tower-icon" width="22" height="22" viewBox="-25 -25 50 50">
+        <path d="M -19 16 L -14 -10 L 0 -21 L 14 -10 L 19 16 Z" fill="${color}" stroke="#120c08" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="-16" y="-4" width="32" height="22" fill="#f5e8b8" stroke="#120c08" stroke-width="3" rx="1"/>
+        <rect x="-10" y="-22" width="20" height="18" fill="#f5e8b8" stroke="#120c08" stroke-width="3" rx="1"/>
+        <rect x="-4" y="-29" width="8" height="9" fill="#3b2a1a"/>
+      </svg>
+    `;
+  } else if (type === "radio") {
+    return `
+      <svg class="tower-icon" width="22" height="22" viewBox="-25 -25 50 50">
+        <path d="M -19 16 L -14 -10 L 0 -21 L 14 -10 L 19 16 Z" fill="${color}" stroke="#120c08" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M 0 -29 L -13 10 L 13 10 Z" fill="#f5e8b8" stroke="#120c08" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="0" cy="-26" r="6" fill="#a9ddff" stroke="#120c08" stroke-width="2"/>
+      </svg>
+    `;
+  } else if (type === "tax") {
+    return `
+      <svg class="tower-icon" width="22" height="22" viewBox="-25 -25 50 50">
+        <path d="M -19 16 L -14 -10 L 0 -21 L 14 -10 L 19 16 Z" fill="${color}" stroke="#120c08" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="-18" y="-11" width="36" height="12" fill="#f5e8b8" stroke="#120c08" stroke-width="3" rx="1"/>
+        <line x1="-18" y1="-4" x2="18" y2="-4" stroke="#3a2515" stroke-width="5" stroke-linecap="round"/>
+        <path d="M 20 -9 L 30 -4 L 20 1 Z" fill="#d7b26b" stroke="#120c08" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+    `;
+  } else {
+    return `
+      <svg class="tower-icon" width="22" height="22" viewBox="-25 -25 50 50">
+        <path d="M -19 16 L -14 -10 L 0 -21 L 14 -10 L 19 16 Z" fill="${color}" stroke="#120c08" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="-8" y="-25" width="16" height="43" fill="#f5e8b8" stroke="#120c08" stroke-width="3" rx="1"/>
+        <circle cx="0" cy="-7" r="16" fill="none" stroke="#d8f5ff" stroke-width="2.5"/>
+      </svg>
+    `;
+  }
+}
+
+function calculateThreatRating(preview) {
+  let totalHp = 0;
+  let multiplier = 1.0;
+  for (const [type, count] of Object.entries(preview.counts)) {
+    const enemy = ENEMIES[type];
+    if (!enemy) continue;
+    let baseEnemyHp = enemy.hp;
+    if (enemy.shield) baseEnemyHp += enemy.shield;
+    totalHp += baseEnemyHp * count;
+  }
+  const traits = preview.traits;
+  if (traits.includes("elite")) multiplier += 0.35;
+  if (traits.includes("slowResistant")) multiplier += 0.15;
+  if (traits.includes("shielded")) multiplier += 0.20;
+  if (traits.includes("armored")) multiplier += 0.15;
+  if (traits.includes("swarm")) multiplier += 0.10;
+  
+  const score = totalHp * multiplier;
+  if (score < 150) return { label: "Low", class: "threat-low" };
+  if (score < 350) return { label: "Moderate", class: "threat-mod" };
+  if (score < 800) return { label: "High", class: "threat-high" };
+  return { label: "Deadly", class: "threat-deadly" };
+}
+
 function renderTraitChips(traits) {
   return (traits ?? []).map((trait) => `<span class="trait-chip">${TRAITS[trait]?.label ?? trait}</span>`).join("");
 }
@@ -202,19 +304,21 @@ function renderWavePreview() {
     target.innerHTML = `<p class="muted">No queued wave.</p>`;
     return;
   }
+  const threat = calculateThreatRating(preview);
   const rows = Object.entries(preview.counts).map(([type, count]) => {
     const enemy = ENEMIES[type];
     return `
       <div class="preview-row">
-        <i style="background:${enemy.color}"></i>
+        ${getEnemySvg(type)}
         <span>${count}x ${enemy.name}</span>
-        <b>${enemy.hp}</b>
+        <b>${enemy.hp} HP</b>
       </div>
     `;
   }).join("");
   target.innerHTML = `
     <div class="preview-meta">
       <span>Wave ${engine.waveIndex + 1}</span>
+      <span class="threat-badge ${threat.class}">${threat.label} Threat</span>
       <span>Reward ${formatMoney(preview.totalReward)}</span>
     </div>
     <div class="preview-list">${rows}</div>
@@ -235,16 +339,22 @@ function renderControls() {
   }).join("");
   app.querySelector("[data-testid='towers']").innerHTML = Object.entries(TOWERS).map(([key, tower]) => `
     <button data-tower="${key}" class="${selectedTowerType === key ? "active" : ""}">
-      <strong>${tower.name}</strong><span>${formatMoney(tower.cost)}</span>
+      ${getTowerSvg(key)}
+      <div class="tower-btn-meta">
+        <strong>${tower.name}</strong><span>${formatMoney(tower.cost)}</span>
+      </div>
     </button>
   `).join("");
-  app.querySelector(".enemy-list").innerHTML = Object.values(ENEMIES).map((enemy) => `
-    <div class="enemy-row">
-      <i style="background:${enemy.color}"></i>
-      <span>${enemy.name}<small>${renderTraitChips(enemy.traits)}</small></span>
-      <b>${enemy.hp}</b>
-    </div>
-  `).join("");
+  app.querySelector(".enemy-list").innerHTML = Object.keys(ENEMIES).map((key) => {
+    const enemy = ENEMIES[key];
+    return `
+      <div class="enemy-row">
+        ${getEnemySvg(key)}
+        <span>${enemy.name}<small>${renderTraitChips(enemy.traits)}</small></span>
+        <b>${enemy.hp} HP</b>
+      </div>
+    `;
+  }).join("");
   renderWavePreview();
 }
 
@@ -457,6 +567,38 @@ function drawEnemyGraphic(enemy) {
   const y = p.y * CELL;
   ctx.save();
   ctx.translate(x, y);
+
+  // 1. Draw base shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+  ctx.beginPath();
+  ctx.ellipse(0, 16, 15, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Draw slow aura
+  if (enemy.slowTimer > 0) {
+    ctx.strokeStyle = "rgba(116, 214, 253, 0.75)";
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.ellipse(0, 16, 13, 5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 3. Draw hunter's mark crosshair
+  if (enemy.markedTimer > 0) {
+    ctx.strokeStyle = "rgba(239, 68, 68, 0.85)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(0, 16, 14, 6, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // Crosshair ticks
+    ctx.beginPath();
+    ctx.moveTo(-18, 16);
+    ctx.lineTo(-13, 16);
+    ctx.moveTo(13, 16);
+    ctx.lineTo(18, 16);
+    ctx.stroke();
+  }
+
   ctx.fillStyle = ENEMIES[enemy.type].color;
   ctx.strokeStyle = THEME.ink;
   ctx.lineWidth = 3;
@@ -526,6 +668,18 @@ function drawEnemyGraphic(enemy) {
     ctx.fill();
     ctx.stroke();
   }
+
+  // 4. Draw shield bubble around the creep
+  if (enemy.shield > 0) {
+    ctx.strokeStyle = "rgba(176, 122, 203, 0.85)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 22, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(176, 122, 203, 0.15)";
+    ctx.fill();
+  }
+
   ctx.restore();
   ctx.fillStyle = "rgba(33, 23, 15, 0.9)";
   ctx.fillRect(x - 20, y - 27, 40, 6);
@@ -593,7 +747,8 @@ function draw() {
   engine.towers.forEach((tower, index) => {
     drawTowerGraphic(tower, index);
   });
-  for (const enemy of engine.enemies) {
+  const sortedEnemies = [...engine.enemies].sort((a, b) => a.progress - b.progress);
+  for (const enemy of sortedEnemies) {
     drawEnemyGraphic(enemy);
   }
   for (const shot of engine.projectiles) {
