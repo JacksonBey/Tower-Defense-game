@@ -1,8 +1,8 @@
-# Project Plan: Concrete Panic TD
+# Project Plan: Runehold TD
 
 ## Overall Vision
 
-Concrete Panic TD is a premium-feeling browser tower defense game currently built as a raw neo-brutalist prototype. The next direction is a WC3-inspired fantasy RTS tower defense overhaul: readable terrain lanes, chunky fantasy towers, creep waves, warm map lighting, ornate but compact panels, and satisfying upgrade identity.
+Runehold TD is a premium-feeling browser tower defense game currently being overhauled from a raw neo-brutalist prototype into a WC3-inspired fantasy RTS tower defense: readable terrain lanes, chunky fantasy towers, creep waves, warm map lighting, ornate but compact panels, and satisfying upgrade identity.
 
 The game should become easy to read moment-to-moment but strategically uncomfortable: players should constantly ask whether to expand, upgrade, sell, pause, speed forward, or save for a better answer to the next wave.
 
@@ -54,9 +54,9 @@ The current game rules are useful and tested. Retheme names, visuals, sounds, an
 
 ### Feedback And Presentation
 
-* Neo-brutalist styling with Space Grotesk and Outfit typography.
-* Canvas tower/enemy graphics.
-* Web Audio synthesized sound cues behind an explicit Sound On/Off toggle.
+* Fantasy RTS styling with Cinzel and Outfit typography.
+* Terrain board, rune build plots, compact command panels, and canvas tower/creep graphics.
+* Retuned Web Audio synthesized cues behind an explicit Sound On/Off toggle.
 * Floating combat text for damage and rewards.
 * Hit and defeat particle bursts.
 * Screen shake on life loss.
@@ -75,9 +75,9 @@ The current game rules are useful and tested. Retheme names, visuals, sounds, an
 
 ## Strategic Gaps
 
-The prototype has a strong tactile shell, but the user is no longer sold on neo-brutalism for this genre. The first gap is now art direction and fantasy RTS usability; the second is deeper planning.
+The prototype now has an initial fantasy RTS shell. The first remaining gap is making that art direction more cohesive across every surface; the second is deeper planning.
 
-1. **Theme Fit**: Shift the game from neo-brutalist industrial to WC3-inspired fantasy RTS tower defense.
+1. **Theme Fit**: Continue the shift from neo-brutalist industrial to WC3-inspired fantasy RTS tower defense.
 2. **Wave Preview**: Players need to see upcoming enemy composition before starting a wave.
 3. **Enemy Traits**: Enemies need tactical identities beyond HP/speed/reward, such as armor, shields, swarm behavior, slow resistance, regeneration, or boss traits.
 4. **Tower Counterplay**: Towers need clearer roles and synergies so different builds solve different wave problems.
@@ -92,26 +92,26 @@ The prototype has a strong tactile shell, but the user is no longer sold on neo-
 Goal: preserve the tested tower defense mechanics while replacing the surface language with a fantasy RTS custom-map feel.
 
 1. **Direction Lock**
-   * Rename the project concept from industrial "Concrete Panic" language to a fantasy RTS tower defense working title.
+   * Rename the project concept from industrial "Concrete Panic" language to a fantasy RTS tower defense working title. Current working title: Runehold TD.
    * Define a small non-infringing style guide: terrain palette, UI panel materials, tower archetypes, creep archetypes, currency names, sound mood, and typography.
    * Keep the board-first layout.
 
 2. **Data Retheme**
    * Retheme towers while preserving their current roles:
-     * Punch Press -> melee/guard/boulder tower archetype.
-     * Radio Spike -> arcane/chain/caster tower archetype.
-     * Tax Stamp -> bounty/mark/ballista tower archetype.
-     * Freezer Staple -> frost/snare/control tower archetype.
+     * Stoneguard Post -> melee/guard/boulder tower archetype.
+     * Arcane Spire -> arcane/chain/caster tower archetype.
+     * Bounty Ballista -> bounty/mark/ballista tower archetype.
+     * Frost Obelisk -> frost/snare/control tower archetype.
    * Retheme enemies as creeps with fantasy silhouettes and clearer tactical classes.
    * Retheme levels as fantasy maps or lanes.
    * Decide whether base-7 currency remains as a quirky relic or becomes fantasy denominations.
 
 3. **Visual Retheme**
-   * Replace stark brutalist surfaces with grass/dirt/stone terrain tiles.
-   * Replace orange build pads with fantasy build plots or rune circles.
-   * Replace hard industrial tower drawings with readable fantasy tower silhouettes.
-   * Replace enemy visuals with creep silhouettes.
-   * Replace the HUD/panels with compact RTS-style command panels.
+   * Replace stark brutalist surfaces with grass/dirt/stone terrain tiles. Initial pass complete.
+   * Replace orange build pads with fantasy build plots or rune circles. Initial pass complete.
+   * Replace hard industrial tower drawings with readable fantasy tower silhouettes. Initial pass complete.
+   * Replace enemy visuals with creep silhouettes. Initial pass complete.
+   * Replace the HUD/panels with compact RTS-style command panels. Initial pass complete.
 
 4. **Audio Retheme**
    * Retune Web Audio cues toward wood, stone, magic, frost, bow, coin, and wave-start motifs.

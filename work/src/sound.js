@@ -1,16 +1,16 @@
 // Reference: SYSTEM.md#Audio-System
 const NOTES = {
-  place: [180, 250],
-  upgrade: [330, 495, 660],
-  wave: [90, 120, 150],
-  spawn: [140],
-  shoot: [520],
-  defeat: [780, 390],
-  escape: [110, 70],
-  waveClear: [440, 660],
-  won: [330, 495, 660, 990],
-  lost: [160, 100, 60],
-  sell: [280, 190]
+  place: [196, 247],
+  upgrade: [392, 523, 784],
+  wave: [110, 165, 220],
+  spawn: [146],
+  shoot: [698],
+  defeat: [880, 587],
+  escape: [98, 73],
+  waveClear: [392, 587, 784],
+  won: [392, 523, 659, 988],
+  lost: [147, 110, 82],
+  sell: [330, 220]
 };
 
 export class SoundSystem {
@@ -52,15 +52,15 @@ export class SoundSystem {
     const osc = this.ctx.createOscillator();
     const amp = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
-    osc.type = type === "shoot" ? "square" : "sawtooth";
+    osc.type = type === "shoot" || type === "place" ? "triangle" : "sawtooth";
     osc.frequency.setValueAtTime(freq, start);
     filter.type = "lowpass";
-    filter.frequency.setValueAtTime(type === "lost" ? 500 : 1400, start);
+    filter.frequency.setValueAtTime(type === "lost" ? 420 : 1800, start);
     amp.gain.setValueAtTime(0.0001, start);
     amp.gain.exponentialRampToValueAtTime(gain, start + 0.012);
-    amp.gain.exponentialRampToValueAtTime(0.0001, start + 0.16);
+    amp.gain.exponentialRampToValueAtTime(0.0001, start + 0.2);
     osc.connect(filter).connect(amp).connect(this.ctx.destination);
     osc.start(start);
-    osc.stop(start + 0.18);
+    osc.stop(start + 0.22);
   }
 }

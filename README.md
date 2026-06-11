@@ -1,23 +1,25 @@
-# Concrete Panic TD
+# Runehold TD
 
-Concrete Panic TD is a neo-brutalist browser tower defense game built with Vite, canvas, Web Audio, Vitest, and Playwright. It is intentionally loud, chunky, and slightly confusing: the economy uses denominations of 7.
+Runehold TD is a fantasy RTS-inspired browser tower defense game built with Vite, canvas, Web Audio, Vitest, and Playwright. It began as a neo-brutalist prototype, but the active direction is now readable custom-map-style fantasy tower defense.
+
+The economy still uses awkward denominations of 7 for personality.
 
 ## Current Features
 
-* 3 authored levels.
-* 5 enemy types with distinct stats and canvas silhouettes.
+* 3 authored war paths.
+* 5 creep types with distinct stats and canvas silhouettes.
 * 4 tower types with 2-3 upgrades each.
 * Base-7 currency:
   * `C` Crown = 49 Bolts
   * `S` Slab = 7 Bolts
   * `B` Bolt = 1 Bolt
-* Grid-based tower placement on build pads.
+* Grid-based tower placement on rune build plots.
 * Tower range preview on hover and selection.
-* Demolish/sell with 70% total investment refund.
+* Salvage/sell with 70% total investment refund.
 * Speed controls: 1x, 2x, Pause.
 * Endless Mode with procedurally scaling waves.
 * Per-level high scores persisted in `localStorage`.
-* Floating combat text, particle bursts, screen shake, synthesized sounds, and custom canvas graphics.
+* Floating combat text, particle bursts, screen shake, synthesized sounds, terrain board, RTS panels, and custom canvas graphics.
 * Unit and Playwright E2E coverage.
 
 ## Play
@@ -65,19 +67,20 @@ npm run test:all
 
 ```text
 .
-├─ AGENT.md              Agent workflow and documentation maintenance guide
-├─ PLAN.md               Product vision, current state, roadmap
-├─ SYSTEM.md             Architecture and file responsibility reference
-├─ TASKS.md              Prioritized backlog and completed work
-├─ docs/
-│  ├─ GAME_DESIGN.md     Mechanics, design gaps, balance direction
-│  └─ TESTING.md         Test strategy and coverage notes
-├─ outputs/              Generated deliverables
-└─ work/
-   ├─ src/               Game source
-   ├─ tests/             Vitest unit tests
-   ├─ e2e/               Playwright tests
-   └─ package.json       Scripts and dependencies
+|-- AGENT.md              Agent workflow and documentation maintenance guide
+|-- PLAN.md               Product vision, current state, roadmap
+|-- SYSTEM.md             Architecture and file responsibility reference
+|-- TASKS.md              Prioritized backlog and completed work
+|-- docs/
+|   |-- GAME_DESIGN.md    Mechanics, design gaps, balance direction
+|   |-- STYLE_GUIDE.md    Fantasy RTS visual and naming direction
+|   `-- TESTING.md        Test strategy and coverage notes
+|-- outputs/              Generated deliverables
+`-- work/
+    |-- src/              Game source
+    |-- tests/            Vitest unit tests
+    |-- e2e/              Playwright tests
+    `-- package.json      Scripts and dependencies
 ```
 
 ## Source Map
@@ -87,13 +90,15 @@ npm run test:all
 * `work/src/engine.js`: deterministic simulation and game rules.
 * `work/src/main.js`: DOM controls, canvas rendering, visual effects, high scores.
 * `work/src/sound.js`: Web Audio sound system.
-* `work/src/styles.css`: visual layout and responsive styling.
+* `work/src/styles.css`: fantasy RTS layout and responsive styling.
 
 See `SYSTEM.md` for the full architecture reference.
 
 ## Design Direction
 
-The next major step is deeper strategy, not more surface polish. Priorities:
+The current priority is making the WC3-inspired fantasy RTS direction feel cohesive without copying Warcraft names, assets, icons, sounds, maps, factions, or lore.
+
+Next priorities:
 
 1. Next-wave preview.
 2. Enemy traits.
@@ -101,4 +106,4 @@ The next major step is deeper strategy, not more surface polish. Priorities:
 4. Distinct level geometry.
 5. Balance simulation tests.
 
-See `docs/GAME_DESIGN.md` and `TASKS.md` for the detailed roadmap.
+See `docs/GAME_DESIGN.md`, `docs/STYLE_GUIDE.md`, and `TASKS.md` for the detailed roadmap.

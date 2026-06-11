@@ -1,6 +1,6 @@
 # Game Design Notes
 
-Concrete Panic TD already has a playable tower defense loop. The current product direction is shifting away from neo-brutalist industrial styling toward a WC3-inspired fantasy RTS tower defense feel, then deepening planning, tradeoffs, and counterplay.
+Runehold TD already has a playable tower defense loop. The current product direction is shifting away from neo-brutalist industrial styling toward a WC3-inspired fantasy RTS tower defense feel, then deepening planning, tradeoffs, and counterplay.
 
 ## Player Fantasy
 
@@ -16,7 +16,7 @@ The game should feel:
 
 ## Art Direction Pivot
 
-The current prototype uses neo-brutalist industrial shapes and copy. That style is distinctive, but it may fight the tower defense fantasy. The new target is WC3-inspired fantasy RTS tower defense:
+The prototype began with neo-brutalist industrial shapes and copy. That style was distinctive, but it fought the tower defense fantasy. The active target is WC3-inspired fantasy RTS tower defense:
 
 * Terrain tiles instead of brutalist slabs.
 * Build plots/rune circles instead of orange industrial pads.
@@ -46,24 +46,24 @@ Do not copy Warcraft names, assets, icons, models, maps, factions, or lore. Use 
 
 ### Towers
 
-Current industrial names should be rethemed while preserving gameplay roles:
+The current tower retheme preserves gameplay roles:
 
-* **Punch Press**: low-cost direct damage tower; fantasy candidate: Guard Tower, Stone Fist, or Watch Post.
-* **Radio Spike**: fast-firing range-oriented tower; fantasy candidate: Arcane Spire, Storm Totem, or Rune Needle.
-* **Tax Stamp**: slower heavy-hit tower; fantasy candidate: Bounty Ballista, Warden Mark, or Siege Ledger.
-* **Freezer Staple**: low-damage tower with slow effect; fantasy candidate: Frost Obelisk, Ice Snare, or Winter Totem.
+* **Stoneguard Post**: low-cost direct damage tower.
+* **Arcane Spire**: fast-firing range-oriented tower.
+* **Bounty Ballista**: slower heavy-hit tower.
+* **Frost Obelisk**: low-damage tower with slow effect.
 
 Each tower currently has a linear upgrade path with two or three upgrades.
 
 ### Enemies
 
-Current industrial enemies should become fantasy creeps:
+The current enemy retheme uses fantasy creeps:
 
-* **Chip Runner**: baseline lightweight creep; fantasy candidate: Gnarl Scout or Hollow Imp.
-* **Bolt Bruiser**: slower high-HP creep; fantasy candidate: Mire Brute or Ironhide.
-* **Glass Skater**: fast fragile creep; fantasy candidate: Wisp Strider or Moon Hare.
-* **Vault Crawler**: very slow heavy creep; fantasy candidate: Stoneback or Siege Beetle.
-* **Static Saint**: mid-speed durable creep; fantasy candidate: Hex Acolyte or Stormbound.
+* **Hollow Imp**: baseline lightweight creep.
+* **Mire Brute**: slower high-HP creep.
+* **Wisp Strider**: fast fragile creep.
+* **Stoneback**: very slow heavy creep.
+* **Hex Acolyte**: mid-speed durable creep.
 
 Enemies currently differ by stats and silhouette. They do not yet have deeper traits.
 
@@ -85,7 +85,7 @@ Demolish refunds 70% of total tower investment, including upgrades.
 
 ## Design Strengths
 
-* The existing visual identity is distinctive and immediate, even if it is no longer the desired final direction.
+* The initial fantasy RTS shell is more genre-aligned than the original industrial style.
 * The board-first layout makes the game feel playable rather than like a UI mockup.
 * Range preview and sell/refund reduce frustration.
 * Speed controls support repeated play.
@@ -96,7 +96,7 @@ Demolish refunds 70% of total tower investment, including upgrades.
 
 ### 1. Theme Needs Retargeting
 
-The first priority is now the WC3-inspired fantasy RTS overhaul. Preserve mechanics and tests, but replace names, visuals, UI treatment, and sounds.
+The first priority is continuing the WC3-inspired fantasy RTS overhaul. Preserve mechanics and tests, but keep improving names, visuals, UI treatment, and sounds.
 
 The retheme should happen before adding lots of new mechanics so future tower/enemy identities are designed for the final fantasy direction.
 
@@ -115,7 +115,7 @@ Candidate traits:
 * **Armored**: reduces small hits; weak to heavy-hit towers.
 * **Shielded**: absorbs first hit or first damage chunk.
 * **Swarm**: many cheap bodies; weak to splash or chain effects.
-* **Slow Resistant**: reduced effect from Freezer Staple.
+* **Slow Resistant**: reduced effect from Frost Obelisk.
 * **Regenerating**: heals if not damaged recently.
 * **Boss/Elite**: visible finale threat with special behavior.
 
@@ -123,10 +123,10 @@ Candidate traits:
 
 Current towers can blur together. Future balance should give each a job:
 
-* Punch Press: efficient single-target burst and armor cracking.
-* Radio Spike: fast hits, chain damage, anti-swarm.
-* Tax Stamp: reward manipulation, mark effects, heavy damage.
-* Freezer Staple: slow, control, setup for other towers.
+* Stoneguard Post: efficient single-target burst and armor cracking.
+* Arcane Spire: fast hits, chain damage, anti-swarm.
+* Bounty Ballista: reward manipulation, mark effects, heavy damage.
+* Frost Obelisk: slow, control, setup for other towers.
 
 ### 5. Upgrades Need Choices
 
@@ -134,10 +134,10 @@ Linear upgrades are useful for a prototype, but branching upgrades make planning
 
 Example directions:
 
-* Punch Press: armor breaker vs. double-hit.
-* Radio Spike: longer range vs. chain arcs.
-* Tax Stamp: bonus reward marks vs. execution damage.
-* Freezer Staple: stronger slow vs. small area freeze.
+* Stoneguard Post: armor breaker vs. double-hit.
+* Arcane Spire: longer range vs. chain arcs.
+* Bounty Ballista: bonus reward marks vs. execution damage.
+* Frost Obelisk: stronger slow vs. small area freeze.
 
 ### 6. Level Geometry Needs Variety
 

@@ -4,18 +4,15 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Now
 
-- `[ ]` Overhaul the theme from neo-brutalist industrial to WC3-inspired fantasy RTS tower defense; see `PLAN.md#WC3-Inspired-Overhaul-Plan`.
-- `[ ]` Rename/retheme towers, enemies, currency, levels, sounds, and UI copy to match the fantasy RTS direction while preserving tested mechanics.
-- `[ ]` Replace the current brutalist CSS/canvas treatment with terrain tiles, readable RTS panels, fantasy tower silhouettes, creep silhouettes, and warm map lighting.
 - `[ ]` Add next-wave preview with enemy icons, counts, total reward, and trait labels.
 - `[ ]` Add enemy trait system: armored, shielded, swarm, slow-resistant, and boss/elite.
 - `[ ]` Add branching upgrade choices for each tower instead of only linear upgrades.
 - `[ ]` Move path and build pads into per-level configuration so each level has distinct geometry.
 - `[ ]` Add deterministic balance simulation tests for at least three viable build strategies.
+- `[ ]` Improve the new fantasy silhouettes at small sizes, especially tower list icons and in-combat overlap readability.
 
 ## Next
 
-- `[ ]` Add a non-infringing fantasy faction/style guide for naming, colors, tower archetypes, enemy archetypes, and icon language.
 - `[ ]` Add boss or elite finale wave to each authored level.
 - `[ ]` Add compact tower stat comparison before placement and before upgrade selection.
 - `[ ]` Add damage types and tower/enemy counter rules.
@@ -52,3 +49,6 @@ This queue tracks project work at a product level. Keep the top section small an
 - `[x]` Persisted high scores per level in LocalStorage.
 - `[x]` Added unit and E2E coverage for game settings, sell mechanics, and core gameplay.
 - `[x]` Expanded project documentation: README, plan, system reference, game design notes, testing guide, and task queue.
+- `[x]` Began WC3-inspired fantasy RTS overhaul with Runehold TD title, fantasy tower/creep/level names, terrain board, rune build plots, command panels, and retuned synthesized cues.
+- `[x]` Added non-infringing fantasy RTS style guide for naming, colors, tower archetypes, creep archetypes, and UI copy.
+- `[x]` Resized the game board to 12x8, extended path routing and buildable pads, adjusted canvas aspect ratios in styles, and updated E2E Playwright click coordinates dynamically (June 11, 2026).

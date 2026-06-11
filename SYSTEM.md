@@ -1,6 +1,6 @@
 # System Architecture Reference
 
-Concrete Panic TD is a small Vite application with a deterministic simulation core and a canvas/DOM presentation layer. The system is intentionally simple: game rules should be easy to test, while visuals and sound can stay expressive.
+Runehold TD is a small Vite application with a deterministic simulation core and a canvas/DOM presentation layer. The system is intentionally simple: game rules should be easy to test, while visuals and sound can stay expressive.
 
 ## Runtime Overview
 
@@ -124,13 +124,13 @@ Audio should remain optional. Gameplay must be fully understandable without soun
 
 **File**: `work/src/styles.css`
 
-Defines layout and neo-brutalist presentation:
+Defines layout and fantasy RTS presentation:
 
 * Google Font imports.
 * Compact top HUD.
 * Board-first responsive layout.
 * Side panel controls.
-* Brutalist borders, hard shadows, high-contrast colors.
+* Wood, stone, parchment, gold, and mana-inspired panel styling.
 * Speed controls, demolish button, enemy ledger, inspection panel.
 
 The board should remain the dominant viewport element. Avoid adding large explanatory text or marketing-style sections to the game screen.

@@ -1,6 +1,6 @@
 # Testing Guide
 
-Concrete Panic TD uses Vitest for deterministic rules and Playwright for browser-facing player scenarios.
+Runehold TD uses Vitest for deterministic rules and Playwright for browser-facing player scenarios.
 
 ## Commands
 

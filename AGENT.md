@@ -1,6 +1,6 @@
 # AI Orientation Guide
 
-This file is the first stop for any agent working on Concrete Panic TD. It explains how to regain context quickly, which documents own which decisions, and how to keep future changes discoverable.
+This file is the first stop for any agent working on Runehold TD. It explains how to regain context quickly, which documents own which decisions, and how to keep future changes discoverable.
 
 ## Core Reference Files
 
@@ -9,6 +9,7 @@ This file is the first stop for any agent working on Concrete Panic TD. It expla
 * **`SYSTEM.md`**: Architecture reference and source-file map. Use it when changing code.
 * **`TASKS.md`**: Active backlog, completed work, and priority order for upcoming implementation.
 * **`docs/GAME_DESIGN.md`**: Gameplay design notes, current mechanics, missing depth, and balancing direction.
+* **`docs/STYLE_GUIDE.md`**: Fantasy RTS visual language, naming map, palette, and IP boundary.
 * **`docs/TESTING.md`**: Test strategy, commands, current coverage, and gaps.
 
 ## File-Level Context
@@ -25,7 +26,7 @@ Files that cannot contain comments, such as `package.json`, should be covered by
 
 ## Project Shape
 
-Concrete Panic TD is a Vite web game in `work/`. The production build is emitted to `outputs/game/`. Runtime code is intentionally small and mostly framework-free:
+Runehold TD is a Vite web game in `work/`. The production build is emitted to `outputs/game/`. Runtime code is intentionally small and mostly framework-free:
 
 * `work/src/data.js` holds levels, enemy profiles, tower stats, paths, and build pads.
 * `work/src/engine.js` owns deterministic simulation state.
