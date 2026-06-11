@@ -4,11 +4,11 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Now
 
-- `[ ]` Add branching upgrade choices for each tower instead of only linear upgrades.
 - `[ ]` Move path and build pads into per-level configuration so each level has distinct geometry.
 - `[ ]` Add deterministic balance simulation tests for at least three viable build strategies.
-- `[ ]` Improve the new fantasy silhouettes at small sizes, especially tower list icons and in-combat overlap readability.
+- `[/]` Improve the new fantasy silhouettes at small sizes, especially tower list icons and in-combat overlap readability. (In progress by Gemini)
 - `[ ]` Improve next-wave preview with creep silhouette icons, threat ratings, and generated endless-wave preview behavior.
+- `[ ]` Tune branching upgrade choices so each branch clearly counters different traits or wave shapes.
 
 ## Next
 
@@ -53,3 +53,4 @@ This queue tracks project work at a product level. Keep the top section small an
 - `[x]` Resized the game board to 12x8, extended path routing and buildable pads, adjusted canvas aspect ratios in styles, and updated E2E Playwright click coordinates dynamically (June 11, 2026).
 - `[x]` Added next-wave preview with creep counts, total reward, and trait labels.
 - `[x]` Added first-pass enemy trait system: armored, shielded, swarm, slow-resistant, and elite.
+- `[x]` Added branching upgrade choices for every tower, with unit and E2E coverage.
