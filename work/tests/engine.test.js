@@ -1,6 +1,6 @@
 // Reference: SYSTEM.md#Unit-Testing
 import { describe, expect, it } from "vitest";
-import { GameEngine, hasTrait, isBuildable, isPath, summarizeWave } from "../src/engine.js";
+import { applyUpgradeStats, GameEngine, hasTrait, isBuildable, isPath, summarizeWave } from "../src/engine.js";
 
 describe("engine", () => {
   it("knows path and build pad cells", () => {
@@ -37,7 +37,30 @@ describe("engine", () => {
     expect(game.towers[0].stats.damage).toBe(14);
     expect(game.towers[0].stats.range).toBeCloseTo(2.15);
     expect(game.towers[0].stats.cooldown).toBeCloseTo(0.54);
+    expect(game.towers[0].stats.bonusVsSwarm).toBe(6);
     expect(game.towers[0].upgradeHistory.map((upgrade) => upgrade.id)).toEqual(["watchfire"]);
+  });
+
+  it("merges branching upgrade counterplay stats", () => {
+    const stats = applyUpgradeStats(
+      { damage: 8, range: 2, cooldown: 0.4, slow: 0 },
+      { damage: 4, chainTargets: 2, shieldBreaker: true, bonusVsShielded: 12 }
+    );
+    expect(stats.damage).toBe(12);
+    expect(stats.chainTargets).toBe(2);
+    expect(stats.shieldBreaker).toBe(true);
+    expect(stats.bonusVsShielded).toBe(12);
+  });
+
+  it("carries branch counterplay through multiple tiers", () => {
+    const game = new GameEngine(1);
+    game.money = 999;
+    game.placeTower("radio", 1, 0);
+    expect(game.upgradeTower(0, 1).ok).toBe(true);
+    expect(game.towers[0].stats.chainTargets).toBe(2);
+    expect(game.upgradeTower(0, 0).ok).toBe(true);
+    expect(game.towers[0].stats.chainTargets).toBe(3);
+    expect(game.towers[0].stats.bonusVsShielded).toBe(12);
   });
 
   it("runs a wave and awards rewards for defeated enemies", () => {

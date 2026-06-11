@@ -44,6 +44,7 @@ test("chooses an alternate upgrade branch", async ({ page }) => {
   expect(stats.damage).toBe(14);
   expect(stats.range).toBeCloseTo(2.15);
   expect(stats.cooldown).toBeCloseTo(0.54);
+  expect(await page.evaluate(() => window.__game.engine.towers[0].stats.bonusVsSwarm)).toBe(6);
   expect(stats.upgrades).toEqual(["watchfire"]);
 });
 

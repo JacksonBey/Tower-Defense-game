@@ -4,6 +4,20 @@ import { BUILDABLE, CELL, ENEMIES, GRID, LEVELS, PATH, TOWERS } from "./data.js"
 const keyOf = ([x, y]) => `${x},${y}`;
 const pathKeys = new Set(PATH.map(keyOf));
 const buildKeys = new Set(BUILDABLE.map(keyOf));
+const UPGRADE_META_KEYS = new Set(["id", "name", "cost", "summary"]);
+const ADDITIVE_UPGRADE_KEYS = new Set([
+  "damage",
+  "range",
+  "cooldown",
+  "slow",
+  "bonusVsArmored",
+  "bonusVsSwarm",
+  "bonusVsShielded",
+  "bonusVsElite",
+  "bountyBonus",
+  "shatterDamage"
+]);
+const MAX_UPGRADE_KEYS = new Set(["multishot", "chainTargets", "splashRadius", "executePercent", "aoeSlowRadius"]);
 
 export function isBuildable(x, y) {
   return x >= 0 && y >= 0 && x < GRID.cols && y < GRID.rows && buildKeys.has(`${x},${y}`);
@@ -41,6 +55,23 @@ export function upgradeOptionsFor(towerOrType, level = 0) {
   const tier = TOWERS[type]?.upgrades[towerLevel];
   if (!tier) return [];
   return Array.isArray(tier) ? tier : [tier];
+}
+
+export function applyUpgradeStats(stats, upgrade) {
+  const next = { ...stats };
+  for (const [key, value] of Object.entries(upgrade)) {
+    if (UPGRADE_META_KEYS.has(key)) continue;
+    if (ADDITIVE_UPGRADE_KEYS.has(key)) {
+      next[key] = (next[key] ?? 0) + value;
+    } else if (MAX_UPGRADE_KEYS.has(key)) {
+      next[key] = Math.max(next[key] ?? 0, value);
+    } else if (typeof value === "boolean") {
+      next[key] = next[key] || value;
+    }
+  }
+  next.cooldown = Math.max(0.16, next.cooldown);
+  next.slow = Math.min(0.75, next.slow ?? 0);
+  return next;
 }
 
 export class GameEngine {
@@ -124,13 +155,7 @@ export class GameEngine {
     this.money -= upgrade.cost;
     tower.level += 1;
     tower.upgradeHistory.push(upgrade);
-    tower.stats = {
-      ...tower.stats,
-      damage: tower.stats.damage + (upgrade.damage ?? 0),
-      range: tower.stats.range + (upgrade.range ?? 0),
-      cooldown: Math.max(0.16, tower.stats.cooldown + (upgrade.cooldown ?? 0)),
-      slow: Math.min(0.75, (tower.stats.slow ?? 0) + (upgrade.slow ?? 0))
-    };
+    tower.stats = applyUpgradeStats(tower.stats, upgrade);
     this.message = `${tower.stats.name} got ${upgrade.name}.`;
     this.events.push({ type: "upgrade", tower: tower.type });
     return { ok: true };
@@ -269,7 +294,7 @@ export class GameEngine {
       const speed = ENEMIES[enemy.type].speed * (enemy.slowTimer > 0 ? 1 - enemy.slowFactor : 1);
       enemy.progress += speed * adjustedDt;
       enemy.slowTimer = Math.max(0, enemy.slowTimer - adjustedDt);
-      enemy.markedTimer = Math.max(0, enemy.markedTimer - adjustedDt);
+      enemy.markedTimer = Math.max(0, (enemy.markedTimer ?? 0) - adjustedDt);
     }
 
     const escaped = this.enemies.filter((enemy) => enemy.progress >= PATH.length - 1);

@@ -4,8 +4,7 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Now
 
-- [ ] Move path and build pads into per-level configuration so each level has distinct geometry.
-- [/] Add deterministic balance simulation tests for at least three viable build strategies. (In progress by Gemini)
+- [/] Move path and build pads into per-level configuration so each level has distinct geometry. (In progress by Gemini)
 
 ## Next
 
@@ -27,6 +26,7 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Completed Work
 
+- [x] Added deterministic balance simulation tests for three viable build strategies (physical, magic, and combo) and trait counterplay (June 11, 2026).
 - [x] Improved the new fantasy silhouettes at small sizes, adding tower list icons, semi-transparent base shadows, aura/bubble overlays, and progress-sorted rendering order (June 11, 2026).
 - [x] Improved next-wave preview with SVG creep silhouettes, dynamic threat ratings (Low, Moderate, High, Deadly), and auto-generation for endless-mode previews (June 11, 2026).
 - [x] Tuned branching upgrade choices to implement deep tactical counters (Multi-shot, Splash, Chain Lightning, Shield Breaker, Hunter's Mark, Armor Pierce, Shatter, Slow Resistance Bypass) with full unit test coverage (June 11, 2026).
