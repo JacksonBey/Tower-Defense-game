@@ -24,6 +24,7 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Completed Work
 
+- [x] Overhauled audio engine to synthesize specialized sound effects per tower and creep type (stone rumbles, magic chirps, plucks, high-pass shatters) and integrated browser-native SpeechSynthesis narrator for cinematic level intros, wave start announcements, elite warnings, and low-lives alerts (June 11, 2026).
 - [x] Added elite finale waves to all three authored levels, surfaced a Finale badge in the wave preview, and covered the data, engine preview, and browser scenario (June 11, 2026).
 - [x] Implemented channel-specific volume controls (Master, Combat, Build, System) with range sliders, localStorage state persistence, environment checks, and unit/E2E coverage (June 11, 2026).
 - [x] Generated high-fidelity fantasy RTS tower icons, integrated them into the build selection panel, and overhauled the HUD layout with a premium mahogany board frame, distinct color-coded status meters, custom scrollbars, and customized trait chip colors. Resolved Playwright click instability on the start button (June 11, 2026).
