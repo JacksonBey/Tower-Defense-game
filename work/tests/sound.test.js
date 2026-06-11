@@ -166,17 +166,21 @@ describe("sound system", () => {
     expect(playResetLevelCalled).toBe(true);
   });
 
-  it("handles ambient drone toggles and updates", () => {
+  it("handles ambient drone and music toggles and updates", () => {
     const sounds = new SoundSystem();
     sounds.enabled = true;
     
     let droneStarted = false;
     let droneStopped = false;
     let droneVolumeUpdated = false;
+    let seqStarted = false;
+    let seqStopped = false;
     
     sounds.startDrone = () => { droneStarted = true; };
     sounds.stopDrone = () => { droneStopped = true; };
     sounds.updateDroneVolume = () => { droneVolumeUpdated = true; };
+    sounds.startSequencer = () => { seqStarted = true; };
+    sounds.stopSequencer = () => { seqStopped = true; };
     
     sounds.setDroneIntensity(true);
     expect(sounds.droneActive).toBe(true);
@@ -189,5 +193,6 @@ describe("sound system", () => {
     
     sounds.disable();
     expect(droneStopped).toBe(true);
+    expect(seqStopped).toBe(true);
   });
 });

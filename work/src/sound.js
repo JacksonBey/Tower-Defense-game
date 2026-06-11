@@ -32,6 +32,20 @@ const CHANNEL_MAP = {
   resetLevel: "system"
 };
 
+const IDLE_CHORDS = [
+  [110.00, 164.81, 246.94, 261.63], // Am9
+  [73.42, 185.00, 261.63, 329.63],  // D7
+  [87.31, 130.81, 164.81, 220.00],  // Fmaj7
+  [98.00, 146.83, 246.94, 293.66]   // G6
+];
+
+const ACTIVE_CHORDS = [
+  [110.00, 164.81, 220.00, 261.63], // Am
+  [87.31, 130.81, 174.61, 220.00],  // F
+  [65.41, 196.00, 261.63, 329.63],  // C
+  [98.00, 146.83, 196.00, 246.94]   // G
+];
+
 export class SoundSystem {
   constructor() {
     this.ctx = null;
@@ -42,6 +56,9 @@ export class SoundSystem {
     this.droneActive = false;
     this.lastPreviewPlay = {};
     this.loadedVoices = [];
+    this.schedulerId = null;
+    this.nextNoteTime = 0;
+    this.currentStep = 0;
 
     const hasLocalStorage = typeof localStorage !== "undefined";
     this.enabled = hasLocalStorage ? localStorage.getItem("runehold-sound-enabled") === "true" : false;
@@ -96,6 +113,7 @@ export class SoundSystem {
       this.noiseBuffer = this.createNoiseBuffer();
     }
     this.startDrone();
+    this.startSequencer();
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("runehold-sound-enabled", "true");
     }
@@ -107,6 +125,7 @@ export class SoundSystem {
   disable() {
     this.enabled = false;
     this.stopDrone();
+    this.stopSequencer();
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("runehold-sound-enabled", "false");
     }
@@ -417,6 +436,185 @@ export class SoundSystem {
       this.toneSweep(523.25, 659.25, 0.08, finalGain * 0.3, "sine");
     }
   }
+  startSequencer() {
+    if (!this.enabled || !this.ctx || typeof this.ctx.createOscillator !== "function" || this.schedulerId) return;
+    this.nextNoteTime = this.ctx.currentTime;
+    this.currentStep = 0;
+    this.schedulerId = setInterval(() => this.schedulerTick(), 50);
+  }
+
+  stopSequencer() {
+    if (this.schedulerId) {
+      clearInterval(this.schedulerId);
+      this.schedulerId = null;
+    }
+  }
+
+  schedulerTick() {
+    if (!this.ctx || typeof this.ctx.currentTime === "undefined") return;
+    const lookahead = 0.12;
+    const stepDuration = this.droneActive ? 0.25 : 0.6;
+    
+    while (this.nextNoteTime < this.ctx.currentTime + lookahead) {
+      this.scheduleNote(this.currentStep, this.nextNoteTime);
+      this.nextNoteTime += stepDuration;
+      this.currentStep = (this.currentStep + 1) % 16;
+    }
+  }
+
+  scheduleNote(step, time) {
+    const masterVol = this.volumes.master ?? 0.7;
+    const systemVol = this.volumes.system ?? 0.7;
+    const musicGain = masterVol * systemVol;
+    if (musicGain <= 0.001) return;
+
+    if (!this.droneActive) {
+      // IDLE THEME: calm fantasy pads
+      const chordIndex = Math.floor(step / 4) % 4;
+      const chord = IDLE_CHORDS[chordIndex];
+      const noteIndex = step % 4;
+      const freq = chord[noteIndex];
+      this.playAmbientTone(freq, time, musicGain * 0.04, 1.8);
+    } else {
+      // ACTIVE THEME: driving combat soundtrack
+      const chordIndex = Math.floor(step / 4) % 4;
+      const chord = ACTIVE_CHORDS[chordIndex];
+      
+      // Kick on 0, 4, 8, 12
+      if (step === 0 || step === 4 || step === 8 || step === 12) {
+        this.playActiveKick(time, musicGain * 0.09);
+      }
+      
+      // Snare on 4, 12
+      if (step === 4 || step === 12) {
+        this.playActiveSnare(time, musicGain * 0.03);
+      }
+      
+      // Snare hat click on 2, 6, 10, 14
+      if (step === 2 || step === 6 || step === 10 || step === 14) {
+        this.playActiveHat(time, musicGain * 0.02);
+      }
+      
+      // Bassline on even steps
+      if (step % 2 === 0) {
+        const rootFreq = chord[0];
+        this.playActiveBass(rootFreq, time, musicGain * 0.05);
+      }
+      
+      // Melodic arpeggio on odd steps
+      if (step % 2 !== 0) {
+        const melodyPattern = [2, 1, 3, 2, 1, 2, 3, 0];
+        const noteIndex = melodyPattern[Math.floor(step / 2) % 8];
+        const freq = chord[noteIndex];
+        this.playActiveMelody(freq, time, musicGain * 0.025);
+      }
+    }
+  }
+
+  playAmbientTone(freq, time, gain, duration) {
+    if (!this.ctx || typeof this.ctx.createOscillator !== "function" || typeof this.ctx.createGain !== "function") return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const amp = this.ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, time);
+      amp.gain.setValueAtTime(0.0001, time);
+      amp.gain.linearRampToValueAtTime(gain, time + 0.15);
+      amp.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      osc.connect(amp).connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + duration + 0.05);
+    } catch (e) {}
+  }
+
+  playActiveKick(time, gain) {
+    if (!this.ctx || typeof this.ctx.createOscillator !== "function" || typeof this.ctx.createGain !== "function") return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const amp = this.ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(130, time);
+      osc.frequency.exponentialRampToValueAtTime(40, time + 0.1);
+      amp.gain.setValueAtTime(0.0001, time);
+      amp.gain.linearRampToValueAtTime(gain, time + 0.005);
+      amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.1);
+      osc.connect(amp).connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + 0.12);
+    } catch (e) {}
+  }
+
+  playActiveSnare(time, gain) {
+    if (!this.ctx || !this.noiseBuffer || typeof this.ctx.createBufferSource !== "function" || typeof this.ctx.createGain !== "function" || typeof this.ctx.createBiquadFilter !== "function") return;
+    try {
+      const source = this.ctx.createBufferSource();
+      source.buffer = this.noiseBuffer;
+      const amp = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(1000, time);
+      amp.gain.setValueAtTime(0.0001, time);
+      amp.gain.linearRampToValueAtTime(gain, time + 0.005);
+      amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.12);
+      source.connect(filter).connect(amp).connect(this.ctx.destination);
+      source.start(time);
+      source.stop(time + 0.15);
+    } catch (e) {}
+  }
+
+  playActiveHat(time, gain) {
+    if (!this.ctx || !this.noiseBuffer || typeof this.ctx.createBufferSource !== "function" || typeof this.ctx.createGain !== "function" || typeof this.ctx.createBiquadFilter !== "function") return;
+    try {
+      const source = this.ctx.createBufferSource();
+      source.buffer = this.noiseBuffer;
+      const amp = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = "highpass";
+      filter.frequency.setValueAtTime(7000, time);
+      amp.gain.setValueAtTime(0.0001, time);
+      amp.gain.linearRampToValueAtTime(gain, time + 0.002);
+      amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.03);
+      source.connect(filter).connect(amp).connect(this.ctx.destination);
+      source.start(time);
+      source.stop(time + 0.04);
+    } catch (e) {}
+  }
+
+  playActiveBass(freq, time, gain) {
+    if (!this.ctx || typeof this.ctx.createOscillator !== "function" || typeof this.ctx.createGain !== "function" || typeof this.ctx.createBiquadFilter !== "function") return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const amp = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq / 2, time);
+      amp.gain.setValueAtTime(0.0001, time);
+      amp.gain.linearRampToValueAtTime(gain, time + 0.01);
+      amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.15);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(300, time);
+      osc.connect(filter).connect(amp).connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + 0.18);
+    } catch (e) {}
+  }
+
+  playActiveMelody(freq, time, gain) {
+    if (!this.ctx || typeof this.ctx.createOscillator !== "function" || typeof this.ctx.createGain !== "function") return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const amp = this.ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq * 2, time);
+      amp.gain.setValueAtTime(0.0001, time);
+      amp.gain.linearRampToValueAtTime(gain, time + 0.005);
+      amp.gain.exponentialRampToValueAtTime(0.0001, time + 0.18);
+      osc.connect(amp).connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + 0.2);
+    } catch (e) {}
+  }
+
 
   startDrone() {
     if (!this.enabled || !this.ctx || typeof this.ctx.createOscillator !== "function" || typeof this.ctx.createGain !== "function" || this.droneOsc) return;
