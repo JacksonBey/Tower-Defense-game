@@ -8,6 +8,8 @@ The economy still uses awkward denominations of 7 for personality.
 
 * 3 authored war paths.
 * 5 creep types with distinct stats and canvas silhouettes.
+* Enemy trait system with swarm, armor, shields, slow resistance, and elite leak penalties.
+* Next-wave preview showing creep counts, reward, and trait tags.
 * 4 tower types with 2-3 upgrades each.
 * Base-7 currency:
   * `C` Crown = 49 Bolts
@@ -100,10 +102,10 @@ The current priority is making the WC3-inspired fantasy RTS direction feel cohes
 
 Next priorities:
 
-1. Next-wave preview.
-2. Enemy traits.
-3. Tower counterplay and branching upgrades.
-4. Distinct level geometry.
-5. Balance simulation tests.
+1. Tower counterplay and branching upgrades.
+2. Distinct level geometry.
+3. Balance simulation tests.
+4. Boss or elite finale waves.
+5. Better small-size silhouettes and wave preview icons.
 
 See `docs/GAME_DESIGN.md`, `docs/STYLE_GUIDE.md`, and `TASKS.md` for the detailed roadmap.

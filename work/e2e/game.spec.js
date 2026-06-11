@@ -15,6 +15,10 @@ test("loads with all requested content visible", async ({ page }) => {
   await expect(page.getByTestId("towers").getByRole("button")).toHaveCount(4);
   await expect(page.getByText("Hex Acolyte")).toBeVisible();
   await expect(page.getByTestId("money")).toContainText("Gold 1C 5S 2B");
+  await expect(page.getByTestId("wave-preview")).toContainText("Wave 1");
+  await expect(page.getByTestId("wave-preview")).toContainText("Reward 1C 4S 3B");
+  await expect(page.getByTestId("wave-preview")).toContainText("4x Hollow Imp");
+  await expect(page.getByTestId("wave-preview")).toContainText("Swarm");
 });
 
 test("places and upgrades a tower", async ({ page }) => {

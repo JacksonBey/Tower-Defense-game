@@ -1,6 +1,6 @@
 // Reference: SYSTEM.md#Unit-Testing
 import { describe, expect, it } from "vitest";
-import { GameEngine, isBuildable, isPath } from "../src/engine.js";
+import { GameEngine, hasTrait, isBuildable, isPath, summarizeWave } from "../src/engine.js";
 
 describe("engine", () => {
   it("knows path and build pad cells", () => {
@@ -81,5 +81,35 @@ describe("engine", () => {
     game.speedMultiplier = 2;
     game.tick(0.1);
     expect(tower.cooldownLeft).toBe(0.8); // reduced by 0.2
+  });
+
+  it("summarizes upcoming waves for preview", () => {
+    const game = new GameEngine(1);
+    const preview = game.previewWave();
+    expect(preview.counts.chip).toBe(4);
+    expect(preview.counts.glass).toBe(2);
+    expect(preview.totalReward).toBe(80);
+    expect(preview.traits).toContain("swarm");
+    expect(summarizeWave(["vault"]).traits).toEqual(["armored", "slowResistant", "elite"]);
+  });
+
+  it("applies armor and shields before health damage", () => {
+    const game = new GameEngine(1);
+    const target = { hp: 50, shield: 10, traits: ["armored"] };
+    const hit = game.applyTowerDamage({ stats: { damage: 20 } }, target);
+    expect(hit).toEqual({ damage: 3, absorbed: 10 });
+    expect(target.hp).toBe(47);
+    expect(target.shield).toBe(0);
+    expect(hasTrait(target, "armored")).toBe(true);
+  });
+
+  it("elite enemies cost extra lives if they escape", () => {
+    const game = new GameEngine(3);
+    game.status = "running";
+    game.spawnIndex = game.level.waves[0].length;
+    game.enemies = [{ type: "vault", hp: 94, maxHp: 94, progress: 99, slowTimer: 0, slowFactor: 0, traits: ["elite"] }];
+    game.tick(0.1);
+    expect(game.lives).toBe(7);
+    expect(game.events).toContainEqual({ type: "escape", count: 1, livesLost: 2 });
   });
 });

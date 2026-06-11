@@ -31,6 +31,7 @@ Current coverage:
 * `data.test.js`
   * Confirms there are exactly 3 levels, 5 enemies, and 4 towers.
   * Confirms every tower has 2-3 upgrades.
+  * Confirms trait metadata exists and every enemy uses known traits.
 * `economy.test.js`
   * Confirms base-7 denomination formatting.
   * Confirms affordability checks.
@@ -42,6 +43,8 @@ Current coverage:
   * Confirms loss state when enemies escape.
   * Confirms sell/refund calculation.
   * Confirms speed multiplier and pause behavior.
+  * Confirms wave preview summaries.
+  * Confirms armor, shields, and elite leak penalties.
 
 ## E2E Tests
 
@@ -54,6 +57,7 @@ work/e2e/game.spec.js
 Current browser scenarios:
 
 * Initial game content loads.
+* Next-wave preview displays wave number, reward, creep counts, and trait tags.
 * Player can place and upgrade a tower.
 * Player can start a wave and observe combat progression.
 * Player can switch levels and see level-specific money/lives.
@@ -62,17 +66,6 @@ Current browser scenarios:
 * Player can toggle 2x, Pause, and 1x speed states.
 
 ## What To Test Next
-
-When adding **wave preview**:
-
-* Unit-test generated preview counts and rewards.
-* E2E-test that preview changes when switching levels and after wave clear.
-
-When adding **enemy traits**:
-
-* Unit-test trait damage modifiers.
-* Unit-test slow resistance, shield depletion, armor, or regeneration.
-* E2E-test that trait labels/icons appear in wave preview.
 
 When adding **branching upgrades**:
 

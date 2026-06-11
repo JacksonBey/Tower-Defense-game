@@ -22,9 +22,10 @@ flowchart LR
 2. `main.js` creates a `GameEngine`, renders controls, and forwards player actions.
 3. `engine.js` mutates simulation state in response to placement, upgrade, sell, start-wave, and tick events.
 4. `engine.js` emits short event objects such as `place`, `shoot`, `defeat`, `escape`, `sell`, and `waveClear`.
-5. `main.js` converts engine events into floating text, particles, shake, high-score updates, and sound triggers.
-6. `economy.js` formats all visible currency using the three denominations of 7.
-7. Tests inspect the engine directly for deterministic rules and use Playwright for browser-facing behavior.
+5. `engine.js` summarizes upcoming waves for the player-facing preview.
+6. `main.js` converts engine events into floating text, particles, shake, high-score updates, and sound triggers.
+7. `economy.js` formats all visible currency using the three denominations of 7.
+8. Tests inspect the engine directly for deterministic rules and use Playwright for browser-facing behavior.
 
 ## State Boundaries
 
@@ -45,6 +46,7 @@ flowchart LR
 
 * Static numeric balance values.
 * Enemy/tower display names, colors, stats, costs, rewards, and upgrades.
+* Enemy trait metadata and trait assignments.
 * Level definitions and, in future, per-level paths/build pads.
 
 ## Data-Configuration
@@ -86,9 +88,10 @@ Contains deterministic gameplay rules:
 * Wave start and enemy spawning.
 * Enemy motion along the path.
 * Tower target selection and projectile bookkeeping.
-* Damage, slow effects, defeat rewards, escapes, lives, win/loss.
+* Damage, armor, shields, slow resistance, defeat rewards, elite escapes, lives, win/loss.
 * Speed scaling through `speedMultiplier`.
 * Endless mode continuation after authored waves.
+* Next-wave summaries through `previewWave()` and `summarizeWave()`.
 * Event emission for presentation.
 
 Important public fields used by UI/tests:
@@ -142,7 +145,7 @@ The board should remain the dominant viewport element. Avoid adding large explan
 Coordinates the browser experience:
 
 * Writes the app shell markup.
-* Renders levels, towers, inspection, HUD, and enemy ledger.
+* Renders levels, towers, next-wave preview, inspection, HUD, and enemy ledger.
 * Handles clicks, canvas hover, tower placement, upgrades, sell, speed, reset, sound, and endless toggle.
 * Draws cells, path, endpoints, towers, enemies, projectiles, range previews, particles, and floating text.
 * Saves per-level high scores in `localStorage`.

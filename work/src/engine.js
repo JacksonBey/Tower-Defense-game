@@ -163,11 +163,32 @@ export class GameEngine {
       type,
       hp: data.hp,
       maxHp: data.hp,
+      shield: data.shield ?? 0,
+      traits: [...(data.traits ?? [])],
       progress: 0,
       slowTimer: 0,
       slowFactor: 0
     });
     this.events.push({ type: "spawn", enemy: type });
+  }
+
+  previewWave(index = this.waveIndex) {
+    return summarizeWave(this.level.waves[index], ENEMIES);
+  }
+
+  applyTowerDamage(tower, target) {
+    let damage = tower.stats.damage;
+    if (hasTrait(target, "armored")) {
+      damage = Math.max(1, Math.ceil(damage * 0.65));
+    }
+    const shieldBefore = target.shield ?? 0;
+    if (shieldBefore > 0) {
+      const absorbed = Math.min(shieldBefore, damage);
+      target.shield -= absorbed;
+      damage -= absorbed;
+    }
+    target.hp -= damage;
+    return { damage, absorbed: shieldBefore - (target.shield ?? 0) };
   }
 
   tick(dt = 0.1) {
@@ -192,8 +213,9 @@ export class GameEngine {
 
     const escaped = this.enemies.filter((enemy) => enemy.progress >= PATH.length - 1);
     if (escaped.length) {
-      this.lives -= escaped.length;
-      this.events.push({ type: "escape", count: escaped.length });
+      const livesLost = escaped.reduce((sum, enemy) => sum + (hasTrait(enemy, "elite") ? 2 : 1), 0);
+      this.lives -= livesLost;
+      this.events.push({ type: "escape", count: escaped.length, livesLost });
     }
     this.enemies = this.enemies.filter((enemy) => enemy.progress < PATH.length - 1);
 
@@ -207,13 +229,14 @@ export class GameEngine {
         .sort((a, b) => b.enemy.progress - a.enemy.progress)[0]?.enemy;
       if (!target) continue;
       const targetPos = this.enemyCenter(target);
-      target.hp -= tower.stats.damage;
+      const hit = this.applyTowerDamage(tower, target);
       if (tower.stats.slow) {
+        const resistance = hasTrait(target, "slowResistant") ? 0.45 : 1;
         target.slowTimer = 1.1;
-        target.slowFactor = Math.max(target.slowFactor, tower.stats.slow);
+        target.slowFactor = Math.max(target.slowFactor, tower.stats.slow * resistance);
       }
       this.projectiles.push({ from: origin, to: targetPos, life: 0.18, color: tower.stats.color });
-      this.events.push({ type: "shoot", tower: tower.type, targetX: targetPos.x, targetY: targetPos.y, damage: tower.stats.damage });
+      this.events.push({ type: "shoot", tower: tower.type, targetX: targetPos.x, targetY: targetPos.y, damage: hit.damage, absorbed: hit.absorbed });
       tower.cooldownLeft = tower.stats.cooldown;
     }
 

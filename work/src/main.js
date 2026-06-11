@@ -1,6 +1,6 @@
 // Reference: SYSTEM.md#Main-Logic
 import "./styles.css";
-import { ENEMIES, GRID, LEVELS, PATH, TOWERS, CELL, BUILDABLE } from "./data.js";
+import { ENEMIES, GRID, LEVELS, PATH, TOWERS, CELL, BUILDABLE, TRAITS } from "./data.js";
 import { formatMoney } from "./economy.js";
 import { GameEngine, isPath, isBuildable } from "./engine.js";
 import { SoundSystem } from "./sound.js";
@@ -44,6 +44,8 @@ app.innerHTML = `
           <input type="checkbox" id="endless-toggle" data-testid="endless-toggle" />
           <label for="endless-toggle">Endless Mode</label>
         </div>
+        <h2>Next Wave</h2>
+        <div class="wave-preview" data-testid="wave-preview"></div>
         <h2>Build Towers</h2>
         <div class="tower-list" data-testid="towers"></div>
         <button class="start" data-testid="start-wave">Start Wave</button>
@@ -170,7 +172,8 @@ function processEvents(events) {
   for (const event of events) {
     sounds.play(event.type);
     if (event.type === "shoot") {
-      addFloatingText(event.targetX, event.targetY - 0.2, `-${event.damage}`, "#f35f5f");
+      const text = event.damage > 0 ? `-${event.damage}` : "Ward";
+      addFloatingText(event.targetX, event.targetY - 0.2, text, event.damage > 0 ? "#f35f5f" : "#78c7e8");
       addExplosion(event.targetX, event.targetY, "#111827", 3);
     } else if (event.type === "defeat") {
       addFloatingText(event.x, event.y - 0.4, `+${formatMoney(event.reward)}`, "#ea580c");
@@ -185,6 +188,38 @@ function processEvents(events) {
     saveHighScore(engine.level.id, engine.waveIndex);
     renderControls();
   }
+}
+
+function renderTraitChips(traits) {
+  return (traits ?? []).map((trait) => `<span class="trait-chip">${TRAITS[trait]?.label ?? trait}</span>`).join("");
+}
+
+function renderWavePreview() {
+  const preview = engine.previewWave();
+  const wave = engine.level.waves[engine.waveIndex];
+  const target = app.querySelector("[data-testid='wave-preview']");
+  if (!wave || !target) {
+    target.innerHTML = `<p class="muted">No queued wave.</p>`;
+    return;
+  }
+  const rows = Object.entries(preview.counts).map(([type, count]) => {
+    const enemy = ENEMIES[type];
+    return `
+      <div class="preview-row">
+        <i style="background:${enemy.color}"></i>
+        <span>${count}x ${enemy.name}</span>
+        <b>${enemy.hp}</b>
+      </div>
+    `;
+  }).join("");
+  target.innerHTML = `
+    <div class="preview-meta">
+      <span>Wave ${engine.waveIndex + 1}</span>
+      <span>Reward ${formatMoney(preview.totalReward)}</span>
+    </div>
+    <div class="preview-list">${rows}</div>
+    <div class="trait-list">${renderTraitChips(preview.traits)}</div>
+  `;
 }
 
 function renderControls() {
@@ -204,8 +239,13 @@ function renderControls() {
     </button>
   `).join("");
   app.querySelector(".enemy-list").innerHTML = Object.values(ENEMIES).map((enemy) => `
-    <div class="enemy-row"><i style="background:${enemy.color}"></i><span>${enemy.name}</span><b>${enemy.hp}</b></div>
+    <div class="enemy-row">
+      <i style="background:${enemy.color}"></i>
+      <span>${enemy.name}<small>${renderTraitChips(enemy.traits)}</small></span>
+      <b>${enemy.hp}</b>
+    </div>
   `).join("");
+  renderWavePreview();
 }
 
 function renderHud() {

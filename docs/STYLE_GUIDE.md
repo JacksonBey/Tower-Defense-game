@@ -42,6 +42,7 @@ Use broad fantasy RTS usability cues only. Do not copy Warcraft names, factions,
 
 * Use "War Paths" for levels.
 * Use "Build Towers" for tower selection.
+* Use "Next Wave" for the planning preview.
 * Use "Creep Ledger" for enemy listing.
 * Use "Gold" as the visible currency label while keeping `C/S/B` denomination formatting.
 * Use "Salvage" instead of "Demolish" for sell/refund.
@@ -53,4 +54,4 @@ Use broad fantasy RTS usability cues only. Do not copy Warcraft names, factions,
 * Add small tower icons in the tower list.
 * Improve tower silhouettes at small sizes.
 * Add creep direction/stride animation.
-* Add wave preview icons using the same creep silhouettes.
+* Add wave preview icons using the same creep silhouettes instead of color dots.

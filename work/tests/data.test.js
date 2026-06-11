@@ -1,6 +1,6 @@
 // Reference: SYSTEM.md#Unit-Testing
 import { describe, expect, it } from "vitest";
-import { ENEMIES, LEVELS, TOWERS } from "../src/data.js";
+import { ENEMIES, LEVELS, TOWERS, TRAITS } from "../src/data.js";
 
 describe("game content", () => {
   it("has exactly the requested level, enemy, and tower counts", () => {
@@ -13,6 +13,14 @@ describe("game content", () => {
     for (const tower of Object.values(TOWERS)) {
       expect(tower.upgrades.length).toBeGreaterThanOrEqual(2);
       expect(tower.upgrades.length).toBeLessThanOrEqual(3);
+    }
+  });
+
+  it("defines known trait metadata and assigns traits to every enemy", () => {
+    expect(Object.keys(TRAITS)).toEqual(["swarm", "armored", "shielded", "slowResistant", "elite"]);
+    for (const enemy of Object.values(ENEMIES)) {
+      expect(enemy.traits.length).toBeGreaterThanOrEqual(1);
+      for (const trait of enemy.traits) expect(TRAITS[trait]).toBeTruthy();
     }
   });
 });

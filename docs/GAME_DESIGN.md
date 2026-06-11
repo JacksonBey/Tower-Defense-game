@@ -65,6 +65,14 @@ The current enemy retheme uses fantasy creeps:
 * **Stoneback**: very slow heavy creep.
 * **Hex Acolyte**: mid-speed durable creep.
 
+Current trait assignments:
+
+* **Swarm**: Hollow Imp and Wisp Strider.
+* **Armored**: Mire Brute and Stoneback.
+* **Shielded**: Hex Acolyte.
+* **Slow-Resistant**: Stoneback.
+* **Elite**: Stoneback.
+
 Enemies currently differ by stats and silhouette. They do not yet have deeper traits.
 
 ### Economy
@@ -100,15 +108,13 @@ The first priority is continuing the WC3-inspired fantasy RTS overhaul. Preserve
 
 The retheme should happen before adding lots of new mechanics so future tower/enemy identities are designed for the final fantasy direction.
 
-### 2. Planning Is Too Thin
+### 2. Planning Needs More Depth
 
-Players do not yet know what is coming next. This weakens the core tower defense decision: preparing for a known threat with limited resources.
-
-Add a wave preview that shows enemy icons, counts, total reward, and traits.
+The first-pass wave preview now shows counts, total reward, and trait tags. Next it should become more strategic: include icons, clearer threat ratings, and generated endless previews.
 
 ### 3. Enemies Need Tactical Identity
 
-Current enemies are stat variants. They need traits that force different tower responses.
+Enemies now have a first-pass trait model. The next step is making those traits drive stronger tower counterplay and clearer build decisions.
 
 Candidate traits:
 
@@ -161,26 +167,20 @@ Manual playtesting is not enough once branching upgrades and traits arrive. Add 
 
 ## Recommended Next Implementation Order
 
-1. **WC3-Inspired Retheme**
-   Lock the fantasy RTS style and retheme data, UI, canvas art, and sound while preserving current mechanics.
-
-2. **Wave Preview**
-   Build the planning surface first. It makes future traits visible and useful.
-
-3. **Enemy Traits**
-   Add data model and rendering labels before adding more enemies.
-
-4. **Tower Roles**
+1. **Tower Roles**
    Tune existing towers around counters before expanding tower count.
 
-5. **Branching Upgrades**
+2. **Branching Upgrades**
    Add strategic choice once towers have clear roles.
 
-6. **Per-Level Geometry**
+3. **Per-Level Geometry**
    Make authored levels feel different after core counters exist.
 
-7. **Balance Simulation**
+4. **Balance Simulation**
    Lock the new strategy layer down with tests.
+
+5. **Preview Polish**
+   Improve wave preview icons, endless preview behavior, and threat readability.
 
 ## Design Rules For Future Work
 
