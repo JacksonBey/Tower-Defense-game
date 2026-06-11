@@ -87,7 +87,7 @@ Demolish refunds 70% of total tower investment, including upgrades.
 
 ### Progression
 
-* Three authored levels define starting money, lives, and wave composition.
+* Three authored levels define starting money, lives, wave composition, and elite finale waves.
 * Endless Mode continues beyond authored waves with procedural scaling.
 * High scores are stored locally per level.
 
@@ -99,6 +99,7 @@ Demolish refunds 70% of total tower investment, including upgrades.
 * Speed controls support repeated play.
 * Particles, floating text, sound, and shake make combat readable and satisfying.
 * Existing tests make mechanics safer to change.
+* Elite finale waves give each authored level a clearer end beat.
 
 ## Design Gaps
 
@@ -177,7 +178,7 @@ Manual playtesting is not enough once branching upgrades and traits arrive. Dete
    Make authored levels feel different after core counters exist.
 
 4. **Balance Simulation**
-   Expand the strategy layer tests with level 2, level 3, and endless-mode cases.
+   Expand the strategy layer tests with level 2, level 3, finale-wave, and endless-mode cases.
 
 5. **Preview Polish**
    Improve wave preview icons, endless preview behavior, and threat readability.

@@ -32,9 +32,13 @@ Current coverage:
   * Confirms there are exactly 3 levels, 5 enemies, and 4 towers.
   * Confirms every tower has 2-3 upgrade tiers and two branch choices per tier.
   * Confirms trait metadata exists and every enemy uses known traits.
+  * Confirms every authored level has an elite finale wave.
 * `economy.test.js`
   * Confirms base-7 denomination formatting.
   * Confirms affordability checks.
+* `sound.test.js`
+  * Confirms sound enabled state and channel volumes persist.
+  * Confirms cue playback uses master and category volume.
 * `engine.test.js`
   * Confirms path/build-pad legality.
   * Confirms placement rules and currency charges.
@@ -68,6 +72,7 @@ Current browser scenarios:
 * Player can choose an alternate upgrade branch and receive its counterplay stat.
 * Player can start a wave and observe combat progression.
 * Player can switch levels and see level-specific money/lives.
+* Player can inspect an authored finale preview with Elite Stoneback pressure.
 * Invalid placement shows feedback.
 * Player can demolish/sell a tower and see refunded currency.
 * Player can toggle 2x, Pause, and 1x speed states.
@@ -85,6 +90,11 @@ When expanding **balance simulations**:
 * Use deterministic seeds for endless/procedural cases.
 * Test small sets of known strategies instead of relying on browser tests.
 * Assert broad outcomes: clear, lose, money remaining, lives remaining, and tower mix.
+
+When changing **audio controls**:
+
+* Unit-test persistence and volume math in `SoundSystem`.
+* E2E-test only the visible controls and stored values; do not depend on real audio output.
 
 ## Test Design Principles
 

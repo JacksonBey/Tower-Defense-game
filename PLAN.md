@@ -56,14 +56,14 @@ The current game rules are useful and tested. Retheme names, visuals, sounds, an
 
 * Fantasy RTS styling with Cinzel and Outfit typography.
 * Terrain board, rune build plots, compact command panels, and canvas tower/creep graphics.
-* Retuned Web Audio synthesized cues behind an explicit Sound On/Off toggle.
+* Retuned Web Audio synthesized cues behind an explicit Sound On/Off toggle and SFX channel controls.
 * Floating combat text for damage and rewards.
 * Hit and defeat particle bursts.
 * Screen shake on life loss.
 
 ### Progression
 
-* Three authored levels.
+* Three authored levels, each ending with an elite finale wave.
 * Endless Mode toggle with procedurally scaling waves after authored content.
 * LocalStorage high scores by level.
 
@@ -132,7 +132,7 @@ Goal: preserve the tested tower defense mechanics while replacing the surface la
 
 * Add enemy traits and damage-type interactions.
 * Add branching upgrade choices for each tower.
-* Add boss or elite waves at the end of each authored level.
+* Tune boss or elite waves at the end of each authored level.
 
 ### Phase 3: Map Variety
 

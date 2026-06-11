@@ -124,3 +124,16 @@ test("toggles speed and pause states", async ({ page }) => {
   speed = await page.evaluate(() => window.__game.engine.speedMultiplier);
   expect(speed).toBe(1);
 });
+
+test("updates sound channel controls", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByTestId("volume-master")).toHaveValue("70");
+
+  await page.getByTestId("volume-master").fill("35");
+  await expect(page.getByTestId("volume-master")).toHaveValue("35");
+  expect(await page.evaluate(() => localStorage.getItem("runehold-volume-master"))).toBe("0.35");
+
+  await page.getByTestId("sound-toggle").click();
+  await expect(page.getByTestId("sound-toggle")).toContainText("Sound On");
+  expect(await page.evaluate(() => localStorage.getItem("runehold-sound-enabled"))).toBe("true");
+});

@@ -60,7 +60,7 @@ Defines the game board and static balance:
 * `PATH`: current route as grid coordinates.
 * `BUILDABLE`: legal tower pads.
 * `ENEMIES`: five enemy profiles.
-* `LEVELS`: three authored levels, starting money, lives, and waves.
+* `LEVELS`: three authored levels, starting money, lives, waves, and elite finale waves.
 * `TOWERS`: four tower profiles with two or three branching upgrade tiers each.
 
 When changing this file, update or add tests for count requirements, legal cells, and balance-sensitive values.
@@ -125,6 +125,7 @@ Implements a small `SoundSystem` around the Web Audio API:
 * Creates `AudioContext` only after user interaction.
 * Toggles sound through explicit player control.
 * Plays short synthesized cues keyed by engine event names.
+* Persists sound enabled state and master/combat/build/system channel volumes in `localStorage`.
 * Throttles rapid shot sounds so combat remains audible without becoming a wall of noise.
 
 Audio should remain optional. Gameplay must be fully understandable without sound.
@@ -155,7 +156,7 @@ Coordinates the browser experience:
 * Handles clicks, canvas hover, tower placement, upgrade choices, sell, speed, reset, sound, and endless toggle.
 * Draws cells, path, endpoints, towers, enemies, projectiles, range previews, particles, and floating text.
 * Saves per-level high scores in `localStorage`.
-* Exposes `window.__game` for test inspection.
+* Exposes `window.__game` for test inspection, including `engine`, static data, and `refresh()`.
 
 This file is currently the largest file. If it grows further, consider extracting rendering helpers or UI rendering into separate modules with new `SYSTEM.md` sections.
 
@@ -185,16 +186,18 @@ The Playwright config starts the dev server automatically for browser tests.
 
 ## Unit-Testing
 
-**Files**: `work/tests/data.test.js`, `work/tests/economy.test.js`, `work/tests/engine.test.js`, `work/tests/simulation.test.js`
+**Files**: `work/tests/data.test.js`, `work/tests/economy.test.js`, `work/tests/engine.test.js`, `work/tests/simulation.test.js`, `work/tests/sound.test.js`
 
 Unit tests protect:
 
 * Required counts: 3 levels, 5 enemies, 4 towers, 2-3 upgrade tiers per tower, and two choices per tier.
+* Elite finale wave data for every authored level.
 * Currency denominations and affordability.
 * Legal path/build-pad detection.
 * Tower placement, branching upgrade, trait-counter stat merging, and sell/refund rules.
 * Wave progression, enemy defeat rewards, loss state, and speed scaling.
 * Deterministic balance simulations for viable strategies and targeted counters.
+* Sound enabled-state and channel-volume persistence.
 
 Add unit tests when changing simulation rules, currency, level data, or tower/enemy balance contracts.
 
@@ -211,6 +214,7 @@ Browser scenarios protect player workflows:
 * Invalid placement feedback.
 * Demolish/sell flow and refund display.
 * Speed and pause controls.
+* Finale preview display.
 
 Use `data-testid` for stable selectors. Keep tests focused on visible behavior and avoid brittle canvas pixel assertions unless verifying a specific rendering regression.
 
