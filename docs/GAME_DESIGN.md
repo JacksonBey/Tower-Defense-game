@@ -73,7 +73,7 @@ Current trait assignments:
 * **Slow-Resistant**: Stoneback.
 * **Elite**: Stoneback.
 
-Enemies currently differ by stats and silhouette. They do not yet have deeper traits.
+Enemies differ by stats, silhouette, and trait rules that drive first-pass counterplay.
 
 ### Economy
 
@@ -114,7 +114,7 @@ The first-pass wave preview now shows counts, total reward, and trait tags. Next
 
 ### 3. Enemies Need Tactical Identity
 
-Enemies now have a first-pass trait model. The next step is making those traits drive stronger tower counterplay and clearer build decisions.
+Enemies now have a first-pass trait model and tower counters for armor, shields, swarm pressure, slow resistance, and elite threats. The next step is tuning those counters so wave previews translate into clearer build decisions.
 
 Candidate traits:
 
@@ -136,7 +136,7 @@ Current towers can blur together. Future balance should give each a job:
 
 ### 5. Upgrade Choices Need Balance
 
-Branching upgrades now exist. The next step is tuning those branches so each choice maps clearly to a different strategic answer.
+Branching upgrades now exist and include first-pass counterplay hooks such as armor pierce, shield breaking, swarm bonuses, elite bonuses, marks, bounty bonuses, multishot, splash, chain damage, and frost resistance bypass. The next step is balance testing those branches against authored waves.
 
 Example directions:
 
@@ -158,7 +158,7 @@ The same route structure makes levels feel like stat changes. Each level should 
 
 ### 7. Balance Needs Simulation
 
-Manual playtesting is not enough once branching upgrades and traits arrive. Add deterministic simulations that verify:
+Manual playtesting is not enough once branching upgrades and traits arrive. Deterministic simulations now verify three viable level 1 strategies, a weak level 2 plan that leaks, and a shield-breaker counter case. Continue expanding them to verify:
 
 * At least three viable strategies can clear level 1.
 * No single tower type clears every level alone without meaningful tradeoff.
@@ -177,7 +177,7 @@ Manual playtesting is not enough once branching upgrades and traits arrive. Add 
    Make authored levels feel different after core counters exist.
 
 4. **Balance Simulation**
-   Lock the new strategy layer down with tests.
+   Expand the strategy layer tests with level 2, level 3, and endless-mode cases.
 
 5. **Preview Polish**
    Improve wave preview icons, endless preview behavior, and threat readability.

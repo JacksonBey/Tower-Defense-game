@@ -5,6 +5,22 @@ import { formatMoney } from "./economy.js";
 import { GameEngine, isPath, isBuildable } from "./engine.js";
 import { SoundSystem } from "./sound.js";
 
+import punchIconUrl from "./assets/stoneguard_post_icon.png";
+import radioIconUrl from "./assets/arcane_spire_icon.png";
+import taxIconUrl from "./assets/bounty_ballista_icon.png";
+import freezerIconUrl from "./assets/frost_obelisk_icon.png";
+
+const TOWER_ICONS = {
+  punch: punchIconUrl,
+  radio: radioIconUrl,
+  tax: taxIconUrl,
+  freezer: freezerIconUrl
+};
+
+function getTowerIconHtml(type) {
+  return `<img class="tower-icon-img" src="${TOWER_ICONS[type]}" alt="${TOWERS[type].name}" />`;
+}
+
 const app = document.querySelector("#app");
 const engine = new GameEngine(1);
 const sounds = new SoundSystem();
@@ -339,7 +355,7 @@ function renderControls() {
   }).join("");
   app.querySelector("[data-testid='towers']").innerHTML = Object.entries(TOWERS).map(([key, tower]) => `
     <button data-tower="${key}" class="${selectedTowerType === key ? "active" : ""}">
-      ${getTowerSvg(key)}
+      ${getTowerIconHtml(key)}
       <div class="tower-btn-meta">
         <strong>${tower.name}</strong><span>${formatMoney(tower.cost)}</span>
       </div>
@@ -368,7 +384,9 @@ function renderHud() {
   app.querySelector("[data-testid='wave']").textContent = waveText;
   
   app.querySelector("[data-testid='message']").textContent = engine.message;
-  app.querySelector("[data-testid='start-wave']").disabled = engine.status === "running" || engine.status === "won" || engine.status === "lost";
+  const startWaveBtn = app.querySelector("[data-testid='start-wave']");
+  startWaveBtn.disabled = engine.status === "running" || engine.status === "won" || engine.status === "lost";
+  startWaveBtn.classList.toggle("pulsing", engine.status === "build");
   app.querySelector("[data-testid='endless-toggle']").checked = engine.endlessMode;
   
   app.querySelectorAll(".speed-group button").forEach((btn) => {

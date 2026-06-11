@@ -18,9 +18,9 @@ flowchart LR
 
 ## Data Flow
 
-1. `data.js` defines static content: grid size, base path, build pads, enemies, levels, and tower upgrade data.
+1. `data.js` defines static content: grid size, base path, build pads, enemies, levels, and tower branch upgrade data.
 2. `main.js` creates a `GameEngine`, renders controls, and forwards player actions.
-3. `engine.js` mutates simulation state in response to placement, upgrade, sell, start-wave, and tick events.
+3. `engine.js` mutates simulation state in response to placement, branch upgrades, sell, start-wave, and tick events.
 4. `engine.js` emits short event objects such as `place`, `shoot`, `defeat`, `escape`, `sell`, and `waveClear`.
 5. `engine.js` summarizes upcoming waves for the player-facing preview.
 6. `main.js` converts engine events into floating text, particles, shake, high-score updates, and sound triggers.
@@ -112,6 +112,7 @@ Upgrade helpers:
 
 * `getUpgradeOptions(indexOrTower)`: returns the available choices for a tower's next tier.
 * `upgradeTower(index, choiceIndex = 0)`: applies one mutually exclusive choice from the next tier.
+* `applyUpgradeStats(stats, upgrade)`: merges additive, max-valued, and boolean counterplay properties.
 
 Prefer adding pure helpers when simulation rules become complicated. Keep UI state out of the engine.
 
@@ -184,15 +185,16 @@ The Playwright config starts the dev server automatically for browser tests.
 
 ## Unit-Testing
 
-**Files**: `work/tests/data.test.js`, `work/tests/economy.test.js`, `work/tests/engine.test.js`
+**Files**: `work/tests/data.test.js`, `work/tests/economy.test.js`, `work/tests/engine.test.js`, `work/tests/simulation.test.js`
 
 Unit tests protect:
 
 * Required counts: 3 levels, 5 enemies, 4 towers, 2-3 upgrade tiers per tower, and two choices per tier.
 * Currency denominations and affordability.
 * Legal path/build-pad detection.
-* Tower placement, branching upgrade, and sell/refund rules.
+* Tower placement, branching upgrade, trait-counter stat merging, and sell/refund rules.
 * Wave progression, enemy defeat rewards, loss state, and speed scaling.
+* Deterministic balance simulations for viable strategies and targeted counters.
 
 Add unit tests when changing simulation rules, currency, level data, or tower/enemy balance contracts.
 

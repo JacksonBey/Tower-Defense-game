@@ -46,6 +46,11 @@ Current coverage:
   * Confirms wave preview summaries.
   * Confirms armor, shields, and elite leak penalties.
   * Confirms alternate upgrade branch choices apply distinct stat changes and record history.
+  * Confirms branch counterplay properties merge across tiers.
+* `simulation.test.js`
+  * Confirms at least three deterministic Level 1 build strategies can clear.
+  * Confirms a weak Level 2 coverage plan leaks.
+  * Confirms Shield Breaker counters shielded acolytes efficiently.
 
 ## E2E Tests
 
@@ -60,7 +65,7 @@ Current browser scenarios:
 * Initial game content loads.
 * Next-wave preview displays wave number, reward, creep counts, and trait tags.
 * Player can place and upgrade a tower.
-* Player can choose an alternate upgrade branch.
+* Player can choose an alternate upgrade branch and receive its counterplay stat.
 * Player can start a wave and observe combat progression.
 * Player can switch levels and see level-specific money/lives.
 * Invalid placement shows feedback.
@@ -75,10 +80,10 @@ When adding **per-level geometry**:
 * Unit-test every build pad is inside the grid and not on the path.
 * E2E-test that levels visibly use different route/build layouts.
 
-When adding **balance simulations**:
+When expanding **balance simulations**:
 
 * Use deterministic seeds for endless/procedural cases.
-* Test a small set of known strategies instead of relying on browser tests.
+* Test small sets of known strategies instead of relying on browser tests.
 * Assert broad outcomes: clear, lose, money remaining, lives remaining, and tower mix.
 
 ## Test Design Principles
