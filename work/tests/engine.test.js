@@ -129,6 +129,15 @@ describe("engine", () => {
     expect(summarizeWave(["vault"]).traits).toEqual(["armored", "slowResistant", "elite"]);
   });
 
+  it("previews authored finale waves with elite pressure", () => {
+    const game = new GameEngine(1);
+    game.waveIndex = game.level.waves.length - 1;
+    const preview = game.previewWave();
+    expect(preview.counts.vault).toBeGreaterThanOrEqual(1);
+    expect(preview.traits).toContain("elite");
+    expect(preview.totalReward).toBeGreaterThan(0);
+  });
+
   it("applies armor and shields before health damage", () => {
     const game = new GameEngine(1);
     const target = { hp: 50, shield: 10, traits: ["armored"] };

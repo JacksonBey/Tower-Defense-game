@@ -35,4 +35,12 @@ describe("game content", () => {
       for (const trait of enemy.traits) expect(TRAITS[trait]).toBeTruthy();
     }
   });
+
+  it("gives every authored level an elite finale wave", () => {
+    for (const level of LEVELS) {
+      expect(level.waves.length).toBeGreaterThanOrEqual(3);
+      const finale = level.waves.at(-1);
+      expect(finale.some((type) => ENEMIES[type].traits.includes("elite"))).toBe(true);
+    }
+  });
 });

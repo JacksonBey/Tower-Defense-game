@@ -320,6 +320,12 @@ p {
   color: #ffffff;
 }
 
+.threat-badge.finale {
+  background: linear-gradient(#ffe7a0, #b45309);
+  color: #1d120a;
+  border-color: #f7dfad;
+}
+
 .trait-list,
 .enemy-row small {
   display: flex;
@@ -590,6 +596,97 @@ canvas {
 
 .speed-group button[data-speed="0"].active {
   background: linear-gradient(#ff9a7e, #c33528);
+}
+
+.audio-panel {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 9px;
+  border: 1px solid #120c08;
+  border-radius: 3px;
+  background: linear-gradient(#533923, #2b1d14);
+  box-shadow: inset 0 0 0 1px rgba(240, 196, 92, 0.15);
+  padding: 6px 8px;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 55px 1fr;
+  gap: 8px;
+  align-items: center;
+  color: #f7dfad;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.slider-row label {
+  text-align: right;
+  letter-spacing: 0.02em;
+}
+
+/* Custom Range Input */
+.slider-row input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  margin: 0;
+}
+
+.slider-row input[type="range"]:focus {
+  outline: none;
+}
+
+/* Track */
+.slider-row input[type="range"]::-webkit-slider-runnable-track {
+  background: #1b120c;
+  height: 6px;
+  border: 1px solid #120c08;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* Thumb */
+.slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -5px;
+  background: linear-gradient(#ecd28d, #b9863f);
+  border: 1.5px solid #120c08;
+  border-radius: 2px;
+  height: 14px;
+  width: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+  transition: background 0.1s;
+}
+
+.slider-row input[type="range"]::-webkit-slider-thumb:hover {
+  background: linear-gradient(#fff0a8, #d79b40);
+}
+
+/* Firefox Support */
+.slider-row input[type="range"]::-moz-range-track {
+  background: #1b120c;
+  height: 6px;
+  border: 1px solid #120c08;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.slider-row input[type="range"]::-moz-range-thumb {
+  background: linear-gradient(#ecd28d, #b9863f);
+  border: 1.5px solid #120c08;
+  border-radius: 2px;
+  height: 14px;
+  width: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+  transition: background 0.1s;
+}
+
+.slider-row input[type="range"]::-moz-range-thumb:hover {
+  background: linear-gradient(#fff0a8, #d79b40);
 }
 
 @media (max-width: 920px) {

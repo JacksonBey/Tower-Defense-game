@@ -60,6 +60,25 @@ app.innerHTML = `
           <input type="checkbox" id="endless-toggle" data-testid="endless-toggle" />
           <label for="endless-toggle">Endless Mode</label>
         </div>
+        <h2>Audio Settings</h2>
+        <div class="audio-panel">
+          <div class="slider-row">
+            <label>Master</label>
+            <input type="range" min="0" max="100" data-volume-channel="master" data-testid="volume-master" />
+          </div>
+          <div class="slider-row">
+            <label>Combat</label>
+            <input type="range" min="0" max="100" data-volume-channel="combat" data-testid="volume-combat" />
+          </div>
+          <div class="slider-row">
+            <label>Build</label>
+            <input type="range" min="0" max="100" data-volume-channel="build" data-testid="volume-build" />
+          </div>
+          <div class="slider-row">
+            <label>System</label>
+            <input type="range" min="0" max="100" data-volume-channel="system" data-testid="volume-system" />
+          </div>
+        </div>
         <h2>Next Wave</h2>
         <div class="wave-preview" data-testid="wave-preview"></div>
         <h2>Build Towers</h2>
@@ -321,6 +340,7 @@ function renderWavePreview() {
     return;
   }
   const threat = calculateThreatRating(preview);
+  const isFinale = !engine.endlessMode && engine.waveIndex === engine.level.waves.length - 1;
   const rows = Object.entries(preview.counts).map(([type, count]) => {
     const enemy = ENEMIES[type];
     return `
@@ -334,6 +354,7 @@ function renderWavePreview() {
   target.innerHTML = `
     <div class="preview-meta">
       <span>Wave ${engine.waveIndex + 1}</span>
+      ${isFinale ? `<span class="threat-badge finale">Finale</span>` : ""}
       <span class="threat-badge ${threat.class}">${threat.label} Threat</span>
       <span>Reward ${formatMoney(preview.totalReward)}</span>
     </div>
@@ -388,6 +409,7 @@ function renderHud() {
   startWaveBtn.disabled = engine.status === "running" || engine.status === "won" || engine.status === "lost";
   startWaveBtn.classList.toggle("pulsing", engine.status === "build");
   app.querySelector("[data-testid='endless-toggle']").checked = engine.endlessMode;
+  app.querySelector("[data-testid='sound-toggle']").textContent = sounds.enabled ? "Sound On" : "Sound Off";
   
   app.querySelectorAll(".speed-group button").forEach((btn) => {
     btn.classList.toggle("active", Number(btn.dataset.speed) === engine.speedMultiplier);
@@ -836,6 +858,11 @@ function refresh() {
 }
 
 app.addEventListener("click", (event) => {
+  // Initialize sound context on first user click if enabled
+  if (sounds.enabled && !sounds.ctx) {
+    sounds.enable(false);
+  }
+
   const level = event.target.closest("[data-level]");
   const tower = event.target.closest("[data-tower]");
   const speedBtn = event.target.closest("[data-speed]");
@@ -881,6 +908,17 @@ app.addEventListener("change", (event) => {
   if (event.target.matches("[data-testid='endless-toggle']")) {
     engine.endlessMode = event.target.checked;
     refresh();
+  }
+});
+
+app.addEventListener("input", (event) => {
+  if (event.target.matches("[data-volume-channel]")) {
+    if (sounds.enabled && !sounds.ctx) {
+      sounds.enable(false);
+    }
+    const channel = event.target.dataset.volumeChannel;
+    const value = Number(event.target.value) / 100;
+    sounds.setVolume(channel, value);
   }
 });
 
@@ -932,7 +970,14 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-window.__game = { engine, TOWERS, LEVELS };
+window.__game = { engine, TOWERS, LEVELS, refresh, renderControls };
+
+// Initialize volume sliders from persisted state
+app.querySelectorAll("[data-volume-channel]").forEach((input) => {
+  const channel = input.dataset.volumeChannel;
+  input.value = Math.round((sounds.volumes[channel] ?? 0.7) * 100);
+});
+
 renderControls();
 refresh();
 requestAnimationFrame(loop);

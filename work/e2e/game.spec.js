@@ -67,6 +67,26 @@ test("switches levels and resets currency/lives", async ({ page }) => {
   await expect(page.getByTestId("lives")).toContainText("Lives 9");
 });
 
+test("shows elite finale preview for authored levels", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+     const { engine, renderControls } = window.__game;
+     engine.waveIndex = engine.level.waves.length - 1;
+     renderControls();
+   });
+  await expect(page.getByTestId("wave-preview")).toContainText("Finale");
+  await expect(page.getByTestId("wave-preview")).toContainText("Stoneback");
+  await expect(page.getByTestId("wave-preview")).toContainText("Elite");
+
+  const finaleTraits = await page.evaluate(() => {
+    return window.__game.LEVELS.map((level) => {
+      const finale = level.waves[level.waves.length - 1];
+      return window.__game.engine.previewWave.call({ level: { waves: [finale] }, generateEndlessWave: () => {} }, 0).traits;
+    });
+  });
+  expect(finaleTraits.every((traits) => traits.includes("elite"))).toBe(true);
+});
+
 test("blocks invalid placement with feedback", async ({ page }) => {
   await page.goto("/");
   await clickCell(page, 0, 2);

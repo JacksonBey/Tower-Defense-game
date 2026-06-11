@@ -40,7 +40,8 @@ export const LEVELS = [
     lives: 12,
     waves: [
       ["chip", "chip", "glass", "chip", "bolt", "chip", "glass"],
-      ["chip", "bolt", "bolt", "glass", "static", "chip"]
+      ["chip", "bolt", "bolt", "glass", "static", "chip"],
+      ["vault"]
     ]
   },
   {
@@ -50,7 +51,8 @@ export const LEVELS = [
     lives: 10,
     waves: [
       ["glass", "chip", "bolt", "glass", "static", "bolt", "chip"],
-      ["vault", "bolt", "glass", "static", "bolt", "vault"]
+      ["vault", "bolt", "glass", "static", "bolt", "vault"],
+      ["static", "vault", "bolt", "vault"]
     ]
   },
   {
@@ -60,7 +62,8 @@ export const LEVELS = [
     lives: 9,
     waves: [
       ["static", "glass", "bolt", "vault", "glass", "static"],
-      ["vault", "vault", "static", "bolt", "glass", "vault", "static"]
+      ["vault", "vault", "static", "bolt", "glass", "vault", "static"],
+      ["static", "vault", "vault", "static", "vault"]
     ]
   }
 ];

@@ -6,7 +6,7 @@ The economy still uses awkward denominations of 7 for personality.
 
 ## Current Features
 
-* 3 authored war paths.
+* 3 authored war paths with elite finale waves.
 * 5 creep types with distinct stats and canvas silhouettes.
 * Enemy trait system with swarm, armor, shields, slow resistance, and elite leak penalties.
 * Next-wave preview showing creep counts, reward, and trait tags.
@@ -19,6 +19,7 @@ The economy still uses awkward denominations of 7 for personality.
 * Tower range preview on hover and selection.
 * Salvage/sell with 70% total investment refund.
 * Speed controls: 1x, 2x, Pause.
+* Sound toggle plus master, combat, build, and system SFX channel controls.
 * Endless Mode with procedurally scaling waves.
 * Per-level high scores persisted in `localStorage`.
 * Floating combat text, particle bursts, screen shake, synthesized sounds, terrain board, RTS panels, and custom canvas graphics.
@@ -103,9 +104,9 @@ The current priority is making the WC3-inspired fantasy RTS direction feel cohes
 Next priorities:
 
 1. Distinct level geometry.
-2. Boss or elite finale waves.
-3. Compact tower stat comparison before placement and upgrades.
-4. Tune branch counterplay from simulation outcomes.
-5. Better endless-mode preview and high-score presentation.
+2. Compact tower stat comparison before placement and upgrades.
+3. Tune branch counterplay from simulation outcomes.
+4. Better endless-mode preview and high-score presentation.
+5. Boss/elite finale tuning after per-level geometry lands.
 
 See `docs/GAME_DESIGN.md`, `docs/STYLE_GUIDE.md`, and `TASKS.md` for the detailed roadmap.

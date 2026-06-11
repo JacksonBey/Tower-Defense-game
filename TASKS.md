@@ -5,15 +5,15 @@ This queue tracks project work at a product level. Keep the top section small an
 ## Now
 
 - [/] Move path and build pads into per-level configuration so each level has distinct geometry. (In progress by Gemini)
+- [/] Add boss or elite finale wave to each authored level. (In progress by Codex)
+- [/] Add sound channel controls for SFX categories if the mix becomes crowded. (In progress by Codex)
 
 ## Next
 
-- `[ ]` Add boss or elite finale wave to each authored level.
 - `[ ]` Add compact tower stat comparison before placement and before upgrade selection.
 - `[ ]` Add damage types and tower/enemy counter rules.
 - `[ ]` Add an area-of-effect Mortar tower once enemy traits exist.
 - `[ ]` Improve Endless Mode UI with current endless wave, best wave, and upcoming generated wave preview.
-- `[ ]` Add sound channel controls for SFX categories if the mix becomes crowded.
 
 ## Later
 
