@@ -35,6 +35,14 @@ export function summarizeWave(wave, enemyCatalog = ENEMIES) {
   return { counts, totalReward, traits: [...traits] };
 }
 
+export function upgradeOptionsFor(towerOrType, level = 0) {
+  const type = typeof towerOrType === "string" ? towerOrType : towerOrType?.type;
+  const towerLevel = typeof towerOrType === "string" ? level : towerOrType?.level ?? level;
+  const tier = TOWERS[type]?.upgrades[towerLevel];
+  if (!tier) return [];
+  return Array.isArray(tier) ? tier : [tier];
+}
+
 export class GameEngine {
   constructor(levelId = 1) {
     this.loadLevel(levelId);
@@ -92,6 +100,7 @@ export class GameEngine {
       x,
       y,
       level: 0,
+      upgradeHistory: [],
       cooldownLeft: 0,
       stats: { ...blueprint }
     });
@@ -100,14 +109,21 @@ export class GameEngine {
     return { ok: true };
   }
 
-  upgradeTower(index) {
+  getUpgradeOptions(indexOrTower) {
+    const tower = typeof indexOrTower === "number" ? this.towers[indexOrTower] : indexOrTower;
+    return upgradeOptionsFor(tower);
+  }
+
+  upgradeTower(index, choiceIndex = 0) {
     const tower = this.towers[index];
     if (!tower) return { ok: false, reason: "missing tower" };
-    const upgrade = TOWERS[tower.type].upgrades[tower.level];
+    const options = this.getUpgradeOptions(tower);
+    const upgrade = options[choiceIndex];
     if (!upgrade) return { ok: false, reason: "fully upgraded" };
     if (this.money < upgrade.cost) return { ok: false, reason: "not enough currency" };
     this.money -= upgrade.cost;
     tower.level += 1;
+    tower.upgradeHistory.push(upgrade);
     tower.stats = {
       ...tower.stats,
       damage: tower.stats.damage + (upgrade.damage ?? 0),
@@ -124,10 +140,7 @@ export class GameEngine {
     const tower = this.towers[index];
     if (!tower) return { ok: false, reason: "missing tower" };
     const blueprint = TOWERS[tower.type];
-    let totalCost = blueprint.cost;
-    for (let i = 0; i < tower.level; i++) {
-      totalCost += blueprint.upgrades[i].cost;
-    }
+    const totalCost = blueprint.cost + (tower.upgradeHistory ?? []).reduce((sum, upgrade) => sum + upgrade.cost, 0);
     const refund = Math.floor(totalCost * 0.7);
     this.money += refund;
     this.towers.splice(index, 1);

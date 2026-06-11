@@ -266,7 +266,7 @@ function renderHud() {
   });
 
   const selected = engine.towers[selectedTowerIndex];
-  const next = selected ? TOWERS[selected.type].upgrades[selected.level] : null;
+  const nextOptions = selected ? engine.getUpgradeOptions(selected) : [];
   const nextKey = selected ? `${selected.id}-${selected.level}-${engine.money}` : "empty";
   if (nextKey === inspectKey) return;
   inspectKey = nextKey;
@@ -274,10 +274,7 @@ function renderHud() {
   let refundText = "";
   if (selected) {
     const blueprint = TOWERS[selected.type];
-    let totalCost = blueprint.cost;
-    for (let i = 0; i < selected.level; i++) {
-      totalCost += blueprint.upgrades[i].cost;
-    }
+    const totalCost = blueprint.cost + (selected.upgradeHistory ?? []).reduce((sum, upgrade) => sum + upgrade.cost, 0);
     refundText = formatMoney(Math.floor(totalCost * 0.7));
   }
 
@@ -285,8 +282,15 @@ function renderHud() {
     <h2>${selected.stats.name}</h2>
     <p>Rank ${selected.level + 1} / ${TOWERS[selected.type].upgrades.length + 1}</p>
     <p>Damage ${selected.stats.damage} Range ${selected.stats.range.toFixed(1)}</p>
-    <div style="display: flex; flex-direction: column; gap: 6px;">
-      <button data-testid="upgrade-tower" ${next ? "" : "disabled"}>${next ? `Upgrade: ${next.name} ${formatMoney(next.cost)}` : "Fully Upgraded"}</button>
+    <div class="upgrade-list">
+      ${nextOptions.length ? nextOptions.map((option, index) => `
+        <button
+          data-testid="${index === 0 ? "upgrade-tower" : `upgrade-tower-${index}`}"
+          data-upgrade-choice="${index}">
+          <strong>${option.name}</strong>
+          <span>${formatMoney(option.cost)} · ${option.summary}</span>
+        </button>
+      `).join("") : `<button data-testid="upgrade-tower" disabled>Fully Upgraded</button>`}
       <button data-testid="sell-tower" class="demolish">Salvage: +${refundText}</button>
     </div>
   ` : `<h2>Command</h2><p>Select a build plot or tower.</p>`;
@@ -682,7 +686,10 @@ app.addEventListener("click", (event) => {
     selectedTowerIndex = -1;
     inspectKey = "";
   } else if (event.target.matches("[data-testid='upgrade-tower']")) {
-    engine.upgradeTower(selectedTowerIndex);
+    engine.upgradeTower(selectedTowerIndex, Number(event.target.dataset.upgradeChoice ?? 0));
+  } else if (event.target.closest("[data-upgrade-choice]")) {
+    const choice = event.target.closest("[data-upgrade-choice]");
+    engine.upgradeTower(selectedTowerIndex, Number(choice.dataset.upgradeChoice ?? 0));
   } else if (event.target.matches("[data-testid='sell-tower']")) {
     if (selectedTowerIndex >= 0) {
       engine.sellTower(selectedTowerIndex);

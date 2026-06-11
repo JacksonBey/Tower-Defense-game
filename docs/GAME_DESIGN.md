@@ -53,7 +53,7 @@ The current tower retheme preserves gameplay roles:
 * **Bounty Ballista**: slower heavy-hit tower.
 * **Frost Obelisk**: low-damage tower with slow effect.
 
-Each tower currently has a linear upgrade path with two or three upgrades.
+Each tower now has two or three upgrade tiers, and every tier offers two mutually exclusive choices.
 
 ### Enemies
 
@@ -134,9 +134,9 @@ Current towers can blur together. Future balance should give each a job:
 * Bounty Ballista: reward manipulation, mark effects, heavy damage.
 * Frost Obelisk: slow, control, setup for other towers.
 
-### 5. Upgrades Need Choices
+### 5. Upgrade Choices Need Balance
 
-Linear upgrades are useful for a prototype, but branching upgrades make planning more interesting.
+Branching upgrades now exist. The next step is tuning those branches so each choice maps clearly to a different strategic answer.
 
 Example directions:
 
@@ -170,8 +170,8 @@ Manual playtesting is not enough once branching upgrades and traits arrive. Add 
 1. **Tower Roles**
    Tune existing towers around counters before expanding tower count.
 
-2. **Branching Upgrades**
-   Add strategic choice once towers have clear roles.
+2. **Branching Upgrade Balance**
+   Tune existing branches around trait counters and level pressure.
 
 3. **Per-Level Geometry**
    Make authored levels feel different after core counters exist.

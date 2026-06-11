@@ -30,7 +30,7 @@ Current coverage:
 
 * `data.test.js`
   * Confirms there are exactly 3 levels, 5 enemies, and 4 towers.
-  * Confirms every tower has 2-3 upgrades.
+  * Confirms every tower has 2-3 upgrade tiers and two branch choices per tier.
   * Confirms trait metadata exists and every enemy uses known traits.
 * `economy.test.js`
   * Confirms base-7 denomination formatting.
@@ -45,6 +45,7 @@ Current coverage:
   * Confirms speed multiplier and pause behavior.
   * Confirms wave preview summaries.
   * Confirms armor, shields, and elite leak penalties.
+  * Confirms alternate upgrade branch choices apply distinct stat changes and record history.
 
 ## E2E Tests
 
@@ -59,6 +60,7 @@ Current browser scenarios:
 * Initial game content loads.
 * Next-wave preview displays wave number, reward, creep counts, and trait tags.
 * Player can place and upgrade a tower.
+* Player can choose an alternate upgrade branch.
 * Player can start a wave and observe combat progression.
 * Player can switch levels and see level-specific money/lives.
 * Invalid placement shows feedback.
@@ -66,12 +68,6 @@ Current browser scenarios:
 * Player can toggle 2x, Pause, and 1x speed states.
 
 ## What To Test Next
-
-When adding **branching upgrades**:
-
-* Unit-test mutually exclusive upgrade branches.
-* Unit-test costs and stat effects.
-* E2E-test selecting each branch from the inspection panel.
 
 When adding **per-level geometry**:
 

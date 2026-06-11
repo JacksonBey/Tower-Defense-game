@@ -7,8 +7,8 @@ This queue tracks project work at a product level. Keep the top section small an
 - `[ ]` Move path and build pads into per-level configuration so each level has distinct geometry.
 - `[ ]` Add deterministic balance simulation tests for at least three viable build strategies.
 - `[/]` Improve the new fantasy silhouettes at small sizes, especially tower list icons and in-combat overlap readability. (In progress by Gemini)
-- `[ ]` Improve next-wave preview with creep silhouette icons, threat ratings, and generated endless-wave preview behavior.
-- `[ ]` Tune branching upgrade choices so each branch clearly counters different traits or wave shapes.
+- `[/]` Improve next-wave preview with creep silhouette icons, threat ratings, and generated endless-wave preview behavior. (In progress by Gemini)
+- `[/]` Tune branching upgrade choices so each branch clearly counters different traits or wave shapes. (In progress by Gemini)
 
 ## Next
 

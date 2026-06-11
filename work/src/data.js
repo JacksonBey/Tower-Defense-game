@@ -74,8 +74,14 @@ export const TOWERS = {
     cooldown: 0.58,
     color: "#6f5138",
     upgrades: [
-      { name: "Oath Stones", cost: 35, damage: 12 },
-      { name: "Twin Watch", cost: 56, cooldown: -0.16 }
+      [
+        { id: "oath-stones", name: "Oath Stones", cost: 35, damage: 12, summary: "+12 damage" },
+        { id: "watchfire", name: "Watchfire", cost: 35, range: 0.35, cooldown: -0.04, summary: "+0.4 range, faster" }
+      ],
+      [
+        { id: "twin-watch", name: "Twin Watch", cost: 56, cooldown: -0.16, summary: "Much faster attacks" },
+        { id: "crag-hammer", name: "Crag Hammer", cost: 56, damage: 18, summary: "+18 damage" }
+      ]
     ]
   },
   radio: {
@@ -86,9 +92,18 @@ export const TOWERS = {
     cooldown: 0.34,
     color: "#386fb0",
     upgrades: [
-      { name: "Rune Lens", cost: 28, range: 0.45 },
-      { name: "Storm Choir", cost: 63, damage: 7 },
-      { name: "Quickened Glyph", cost: 84, cooldown: -0.08 }
+      [
+        { id: "rune-lens", name: "Rune Lens", cost: 28, range: 0.45, summary: "+0.5 range" },
+        { id: "blue-spark", name: "Blue Spark", cost: 28, damage: 4, summary: "+4 damage" }
+      ],
+      [
+        { id: "storm-choir", name: "Storm Choir", cost: 63, damage: 7, summary: "+7 damage" },
+        { id: "wide-sigil", name: "Wide Sigil", cost: 63, range: 0.65, summary: "+0.7 range" }
+      ],
+      [
+        { id: "quickened-glyph", name: "Quickened Glyph", cost: 84, cooldown: -0.08, summary: "Faster casting" },
+        { id: "deep-focus", name: "Deep Focus", cost: 84, damage: 10, cooldown: 0.08, summary: "+10 damage, slower" }
+      ]
     ]
   },
   tax: {
@@ -99,8 +114,14 @@ export const TOWERS = {
     cooldown: 1.05,
     color: "#a85c2a",
     upgrades: [
-      { name: "Hunter's Mark", cost: 42, damage: 18 },
-      { name: "Longbow Winch", cost: 70, range: 0.65 }
+      [
+        { id: "hunters-mark", name: "Hunter's Mark", cost: 42, damage: 18, summary: "+18 damage" },
+        { id: "rangefinder", name: "Rangefinder", cost: 42, range: 0.45, cooldown: -0.08, summary: "+0.5 range, faster" }
+      ],
+      [
+        { id: "longbow-winch", name: "Longbow Winch", cost: 70, range: 0.65, summary: "+0.7 range" },
+        { id: "siege-bolt", name: "Siege Bolt", cost: 70, damage: 26, cooldown: 0.18, summary: "+26 damage, slower" }
+      ]
     ]
   },
   freezer: {
@@ -112,9 +133,18 @@ export const TOWERS = {
     slow: 0.34,
     color: "#4f8fc7",
     upgrades: [
-      { name: "Winter Bite", cost: 49, slow: 0.16 },
-      { name: "Rime Shards", cost: 77, damage: 10 },
-      { name: "Glacier Crown", cost: 98, range: 0.55 }
+      [
+        { id: "winter-bite", name: "Winter Bite", cost: 49, slow: 0.16, summary: "+16% slow" },
+        { id: "cold-reach", name: "Cold Reach", cost: 49, range: 0.45, summary: "+0.5 range" }
+      ],
+      [
+        { id: "rime-shards", name: "Rime Shards", cost: 77, damage: 10, summary: "+10 damage" },
+        { id: "deep-freeze", name: "Deep Freeze", cost: 77, slow: 0.2, cooldown: 0.08, summary: "Stronger slow, slower" }
+      ],
+      [
+        { id: "glacier-crown", name: "Glacier Crown", cost: 98, range: 0.55, summary: "+0.6 range" },
+        { id: "ice-heart", name: "Ice Heart", cost: 98, damage: 16, slow: 0.08, summary: "+16 damage, more slow" }
+      ]
     ]
   }
 };

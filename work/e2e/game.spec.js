@@ -25,9 +25,26 @@ test("places and upgrades a tower", async ({ page }) => {
   await page.goto("/");
   await clickCell(page, 1, 0);
   await expect(page.getByTestId("inspect")).toContainText("Stoneguard Post");
+  await expect(page.getByTestId("inspect")).toContainText("Oath Stones");
+  await expect(page.getByTestId("inspect")).toContainText("Watchfire");
   await page.getByTestId("upgrade-tower").click();
   await expect(page.getByTestId("inspect")).toContainText("Rank 2");
   await expect(page.getByTestId("money")).toContainText("0C 3S 2B");
+});
+
+test("chooses an alternate upgrade branch", async ({ page }) => {
+  await page.goto("/");
+  await clickCell(page, 1, 0);
+  await page.getByTestId("upgrade-tower-1").click();
+  await expect(page.getByTestId("inspect")).toContainText("Rank 2");
+  const stats = await page.evaluate(() => {
+    const tower = window.__game.engine.towers[0];
+    return { damage: tower.stats.damage, range: tower.stats.range, cooldown: tower.stats.cooldown, upgrades: tower.upgradeHistory.map((u) => u.id) };
+  });
+  expect(stats.damage).toBe(14);
+  expect(stats.range).toBeCloseTo(2.15);
+  expect(stats.cooldown).toBeCloseTo(0.54);
+  expect(stats.upgrades).toEqual(["watchfire"]);
 });
 
 test("starts a wave and advances combat state", async ({ page }) => {

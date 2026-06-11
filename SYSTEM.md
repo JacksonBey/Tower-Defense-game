@@ -32,7 +32,7 @@ flowchart LR
 ### Keep In `engine.js`
 
 * Money, lives, waves, wave index, spawn timers, enemies, towers, projectiles, events.
-* Tower placement, upgrades, sell/refund logic, target selection, damage, rewards, speed scaling, endless wave generation, win/loss state.
+* Tower placement, branching upgrades, sell/refund logic, target selection, damage, rewards, speed scaling, endless wave generation, win/loss state.
 * Any future rule that should be independently testable.
 
 ### Keep In `main.js`
@@ -45,7 +45,7 @@ flowchart LR
 ### Keep In `data.js`
 
 * Static numeric balance values.
-* Enemy/tower display names, colors, stats, costs, rewards, and upgrades.
+* Enemy/tower display names, colors, stats, costs, rewards, and branching upgrades.
 * Enemy trait metadata and trait assignments.
 * Level definitions and, in future, per-level paths/build pads.
 
@@ -61,7 +61,7 @@ Defines the game board and static balance:
 * `BUILDABLE`: legal tower pads.
 * `ENEMIES`: five enemy profiles.
 * `LEVELS`: three authored levels, starting money, lives, and waves.
-* `TOWERS`: four tower profiles and two or three upgrades each.
+* `TOWERS`: four tower profiles with two or three branching upgrade tiers each.
 
 When changing this file, update or add tests for count requirements, legal cells, and balance-sensitive values.
 
@@ -84,7 +84,7 @@ All player-facing prices and balances should use `formatMoney`. Do not hand-form
 Contains deterministic gameplay rules:
 
 * Level loading and reset.
-* Tower placement, upgrade, and sell/refund.
+* Tower placement, branching upgrade choices, and sell/refund.
 * Wave start and enemy spawning.
 * Enemy motion along the path.
 * Tower target selection and projectile bookkeeping.
@@ -107,6 +107,11 @@ Important public fields used by UI/tests:
 * `message`
 * `speedMultiplier`
 * `endlessMode`
+
+Upgrade helpers:
+
+* `getUpgradeOptions(indexOrTower)`: returns the available choices for a tower's next tier.
+* `upgradeTower(index, choiceIndex = 0)`: applies one mutually exclusive choice from the next tier.
 
 Prefer adding pure helpers when simulation rules become complicated. Keep UI state out of the engine.
 
@@ -145,8 +150,8 @@ The board should remain the dominant viewport element. Avoid adding large explan
 Coordinates the browser experience:
 
 * Writes the app shell markup.
-* Renders levels, towers, next-wave preview, inspection, HUD, and enemy ledger.
-* Handles clicks, canvas hover, tower placement, upgrades, sell, speed, reset, sound, and endless toggle.
+* Renders levels, towers, branching upgrade choices, next-wave preview, inspection, HUD, and enemy ledger.
+* Handles clicks, canvas hover, tower placement, upgrade choices, sell, speed, reset, sound, and endless toggle.
 * Draws cells, path, endpoints, towers, enemies, projectiles, range previews, particles, and floating text.
 * Saves per-level high scores in `localStorage`.
 * Exposes `window.__game` for test inspection.
@@ -183,10 +188,10 @@ The Playwright config starts the dev server automatically for browser tests.
 
 Unit tests protect:
 
-* Required counts: 3 levels, 5 enemies, 4 towers, 2-3 upgrades per tower.
+* Required counts: 3 levels, 5 enemies, 4 towers, 2-3 upgrade tiers per tower, and two choices per tier.
 * Currency denominations and affordability.
 * Legal path/build-pad detection.
-* Tower placement, upgrade, and sell/refund rules.
+* Tower placement, branching upgrade, and sell/refund rules.
 * Wave progression, enemy defeat rewards, loss state, and speed scaling.
 
 Add unit tests when changing simulation rules, currency, level data, or tower/enemy balance contracts.
@@ -198,7 +203,7 @@ Add unit tests when changing simulation rules, currency, level data, or tower/en
 Browser scenarios protect player workflows:
 
 * Initial content loads.
-* Tower placement and upgrade.
+* Tower placement and branching upgrades.
 * Starting and resolving a wave.
 * Level switching and reset values.
 * Invalid placement feedback.

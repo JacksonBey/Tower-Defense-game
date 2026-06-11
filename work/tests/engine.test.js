@@ -27,6 +27,19 @@ describe("engine", () => {
     expect(game.events).toContainEqual({ type: "upgrade", tower: "punch" });
   });
 
+  it("supports mutually exclusive upgrade branch choices", () => {
+    const game = new GameEngine(1);
+    game.placeTower("punch", 1, 0);
+    const options = game.getUpgradeOptions(0);
+    expect(options.map((option) => option.name)).toEqual(["Oath Stones", "Watchfire"]);
+    expect(game.upgradeTower(0, 1).ok).toBe(true);
+    expect(game.towers[0].level).toBe(1);
+    expect(game.towers[0].stats.damage).toBe(14);
+    expect(game.towers[0].stats.range).toBeCloseTo(2.15);
+    expect(game.towers[0].stats.cooldown).toBeCloseTo(0.54);
+    expect(game.towers[0].upgradeHistory.map((upgrade) => upgrade.id)).toEqual(["watchfire"]);
+  });
+
   it("runs a wave and awards rewards for defeated enemies", () => {
     const game = new GameEngine(1);
     game.placeTower("radio", 2, 0);
