@@ -18,6 +18,9 @@ const ADDITIVE_UPGRADE_KEYS = new Set([
   "shatterDamage"
 ]);
 const MAX_UPGRADE_KEYS = new Set(["multishot", "chainTargets", "splashRadius", "executePercent", "aoeSlowRadius"]);
+export const TARGETING_MODES = ["first", "last", "strongest", "weakest"];
+const BUILD_TIMER_SECONDS = 15;
+const EARLY_START_REWARD_PER_SECOND = 2;
 
 export function isBuildable(x, y, engine) {
   if (engine) return engine.isBuildable(x, y);
@@ -76,6 +79,14 @@ export function applyUpgradeStats(stats, upgrade) {
   return next;
 }
 
+export function targetPriorityValue(enemy, mode) {
+  const toughness = (enemy.hp ?? 0) + (enemy.shield ?? 0);
+  if (mode === "last") return -enemy.progress;
+  if (mode === "strongest") return toughness;
+  if (mode === "weakest") return -toughness;
+  return enemy.progress;
+}
+
 export class GameEngine {
   constructor(levelId = 1) {
     this.loadLevel(levelId);
@@ -103,6 +114,7 @@ export class GameEngine {
     this.time = 0;
     this.speedMultiplier = 1;
     this.endlessMode = false;
+    this.buildTimer = 0;
   }
 
   isPath(x, y) {
@@ -145,10 +157,22 @@ export class GameEngine {
       level: 0,
       upgradeHistory: [],
       cooldownLeft: 0,
+      targetingMode: "first",
+      totalDamage: 0,
       stats: { ...blueprint }
     });
     this.message = `${blueprint.name} stands ready.`;
     this.events.push({ type: "place", tower: type, x, y });
+    return { ok: true };
+  }
+
+  setTowerTargeting(index, mode) {
+    const tower = this.towers[index];
+    if (!tower) return { ok: false, reason: "missing tower" };
+    if (!TARGETING_MODES.includes(mode)) return { ok: false, reason: "unknown targeting mode" };
+    tower.targetingMode = mode;
+    this.message = `${tower.stats.name} targets ${mode}.`;
+    this.events.push({ type: "targeting", tower: tower.type, mode });
     return { ok: true };
   }
 
@@ -189,12 +213,25 @@ export class GameEngine {
   startWave() {
     if (this.status === "running") return { ok: false, reason: "wave already running" };
     if (this.waveIndex >= this.level.waves.length) return { ok: false, reason: "no waves left" };
+    const earlyReward = this.status === "build" && this.buildTimer > 0
+      ? Math.ceil(this.buildTimer * EARLY_START_REWARD_PER_SECOND)
+      : 0;
+    if (earlyReward > 0) {
+      this.money += earlyReward;
+      this.events.push({ type: "earlyStart", reward: earlyReward });
+    }
+    this.buildTimer = 0;
     this.status = "running";
     this.spawnIndex = 0;
     this.spawnTimer = 0;
     this.message = `Wave ${this.waveIndex + 1} enters the path.`;
     this.events.push({ type: "wave" });
-    return { ok: true };
+    return { ok: true, earlyReward };
+  }
+
+  getEarlyStartReward() {
+    if (this.status !== "build" || this.buildTimer <= 0) return 0;
+    return Math.ceil(this.buildTimer * EARLY_START_REWARD_PER_SECOND);
   }
 
   enemyCenter(enemy) {
@@ -289,11 +326,20 @@ export class GameEngine {
     return { damage, absorbed: shieldBefore - (target.shield ?? 0) };
   }
 
+  recordTowerDamage(tower, hit) {
+    if (!tower || typeof tower.totalDamage !== "number") return;
+    tower.totalDamage += Math.max(0, hit.damage) + Math.max(0, hit.absorbed ?? 0);
+  }
+
   tick(dt = 0.1) {
     this.events = [];
     if (this.speedMultiplier === 0) return;
     const adjustedDt = dt * this.speedMultiplier;
     this.time += adjustedDt;
+    if (this.status === "build") {
+      this.buildTimer = Math.max(0, this.buildTimer - adjustedDt);
+      return;
+    }
     if (this.status !== "running") return;
     const wave = this.level.waves[this.waveIndex];
     this.spawnTimer -= adjustedDt;
@@ -326,7 +372,10 @@ export class GameEngine {
       const targetsInRange = this.enemies
         .map((enemy) => ({ enemy, dist: distance(origin, this.enemyCenter(enemy)) }))
         .filter((item) => item.dist <= tower.stats.range)
-        .sort((a, b) => b.enemy.progress - a.enemy.progress);
+        .sort((a, b) => {
+          const priority = targetPriorityValue(b.enemy, tower.targetingMode) - targetPriorityValue(a.enemy, tower.targetingMode);
+          return priority || b.enemy.progress - a.enemy.progress;
+        });
 
       if (targetsInRange.length === 0) continue;
 
@@ -348,6 +397,7 @@ export class GameEngine {
         }
 
         const hit = this.applyTowerDamage(tower, target);
+        this.recordTowerDamage(tower, hit);
 
         // Apply Slow / Control
         if (tower.stats.slow) {
@@ -377,7 +427,8 @@ export class GameEngine {
             if (other.id === target.id) continue;
             const otherPos = this.enemyCenter(other);
             if (distance(targetPos, otherPos) <= tower.stats.splashRadius) {
-              this.applyTowerDamage({ stats: { damage: Math.ceil(tower.stats.damage * 0.5) } }, other);
+              const splashHit = this.applyTowerDamage({ stats: { damage: Math.ceil(tower.stats.damage * 0.5) } }, other);
+              this.recordTowerDamage(tower, splashHit);
             }
           }
         }
@@ -399,7 +450,8 @@ export class GameEngine {
             if (!nextTarget) break;
             current = nextTarget;
             hitEnemies.add(current.id);
-            this.applyTowerDamage({ stats: { damage: chainDamage } }, current);
+            const chainHit = this.applyTowerDamage({ stats: { damage: chainDamage } }, current);
+            this.recordTowerDamage(tower, chainHit);
             this.projectiles.push({ from: currentPos, to: this.enemyCenter(current), life: 0.15, color: "#74d6c5", type: "chain" });
             chainCount--;
           }
@@ -429,6 +481,7 @@ export class GameEngine {
       this.waveIndex += 1;
       if (this.endlessMode || this.waveIndex < this.level.waves.length) {
         this.status = "build";
+        this.buildTimer = BUILD_TIMER_SECONDS;
         this.message = "Wave broken. Spend wisely.";
         this.events.push({ type: "waveClear" });
         if (this.waveIndex >= this.level.waves.length) {

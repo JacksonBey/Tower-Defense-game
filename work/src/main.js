@@ -2,7 +2,7 @@
 import "./styles.css";
 import { ENEMIES, GRID, LEVELS, PATH, TOWERS, CELL, BUILDABLE, TRAITS } from "./data.js";
 import { formatMoney } from "./economy.js";
-import { GameEngine, isPath, isBuildable } from "./engine.js";
+import { GameEngine, TARGETING_MODES, isPath, isBuildable } from "./engine.js";
 import { SoundSystem } from "./sound.js";
 import { getTowerStatRows, getTowerCounterTags } from "./statComparison.js";
 
@@ -16,6 +16,13 @@ const TOWER_ICONS = {
   radio: radioIconUrl,
   tax: taxIconUrl,
   freezer: freezerIconUrl
+};
+
+const TARGETING_LABELS = {
+  first: "First",
+  last: "Last",
+  strongest: "Strongest",
+  weakest: "Weakest"
 };
 
 function getTowerIconHtml(type) {
@@ -527,6 +534,8 @@ function processEvents(events) {
       sounds.play(event.type);
       sounds.speak(`Wave ${engine.waveIndex + 1} approaches!`);
       showBanner(`WAVE ${engine.waveIndex + 1}`, "THE ONSLAUGHT BEGINS", 2.2, "#fca5a5");
+    } else if (event.type === "earlyStart") {
+      addFloatingText(6, 0.7, `Rush +${formatMoney(event.reward)}`, "#ffe7a0");
     } else if (event.type === "won") {
       sounds.play(event.type);
       sounds.speak("Runehold stands victorious!");
@@ -766,6 +775,8 @@ function renderHud() {
   const startWaveBtn = app.querySelector("[data-testid='start-wave']");
   startWaveBtn.disabled = engine.status === "running" || engine.status === "won" || engine.status === "lost";
   startWaveBtn.classList.toggle("pulsing", engine.status === "build");
+  const earlyReward = engine.getEarlyStartReward();
+  startWaveBtn.textContent = earlyReward > 0 ? `Start Wave (+${formatMoney(earlyReward)})` : "Start Wave";
   app.querySelector("[data-testid='endless-toggle']").checked = engine.endlessMode;
   app.querySelector("[data-testid='sound-toggle']").textContent = sounds.enabled ? "Sound On" : "Sound Off";
   
@@ -775,7 +786,9 @@ function renderHud() {
 
   const selected = engine.towers[selectedTowerIndex];
   const nextOptions = selected ? engine.getUpgradeOptions(selected) : [];
-  const nextKey = selected ? `${selected.id}-${selected.level}-${engine.money}` : `build-${selectedTowerType}-${engine.money}`;
+  const nextKey = selected
+    ? `${selected.id}-${selected.level}-${engine.money}-${selected.targetingMode}-${Math.floor(selected.totalDamage)}`
+    : `build-${selectedTowerType}-${engine.money}`;
   if (nextKey === inspectKey) return;
   inspectKey = nextKey;
   
@@ -791,6 +804,24 @@ function renderHud() {
     <p>Rank ${selected.level + 1} / ${TOWERS[selected.type].upgrades.length + 1}</p>
     ${renderStatRows(selected.stats)}
     ${renderCounterTags(selected.stats)}
+    <div class="tower-ledger" data-testid="tower-damage">
+      <span>Damage Done</span>
+      <strong>${Math.floor(selected.totalDamage)}</strong>
+    </div>
+    <div class="targeting-panel" data-testid="targeting-panel">
+      <span>Target</span>
+      <div class="targeting-modes">
+        ${TARGETING_MODES.map((mode) => `
+          <button
+            type="button"
+            data-target-mode="${mode}"
+            data-testid="target-mode-${mode}"
+            class="${selected.targetingMode === mode ? "active" : ""}">
+            ${TARGETING_LABELS[mode]}
+          </button>
+        `).join("")}
+      </div>
+    </div>
     <div class="upgrade-list">
       ${nextOptions.length ? nextOptions.map((option, index) => `
         <button
@@ -1527,6 +1558,7 @@ app.addEventListener("click", (event) => {
   const level = event.target.closest("[data-level]");
   const tower = event.target.closest("[data-tower]");
   const speedBtn = event.target.closest("[data-speed]");
+  const targetModeBtn = event.target.closest("[data-target-mode]");
   
   if (level) {
     engine.loadLevel(Number(level.dataset.level));
@@ -1547,6 +1579,9 @@ app.addEventListener("click", (event) => {
     sounds.play("click", mult);
   } else if (event.target.matches("[data-testid='start-wave']")) {
     engine.startWave();
+  } else if (targetModeBtn) {
+    engine.setTowerTargeting(selectedTowerIndex, targetModeBtn.dataset.targetMode);
+    sounds.play("click", 0.9);
   } else if (event.target.matches("[data-testid='reset-level']")) {
     const prevEndless = engine.endlessMode;
     engine.loadLevel(engine.level.id);

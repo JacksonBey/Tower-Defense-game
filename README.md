@@ -17,8 +17,11 @@ The economy still uses awkward denominations of 7 for personality.
   * `B` Bolt = 1 Bolt
 * Grid-based tower placement on rune build plots.
 * Compact stat comparisons before tower placement and upgrade selection.
+* Tower targeting modes: First, Last, Strongest, and Weakest.
+* Lifetime tower damage counters in the inspection panel.
 * Tower range preview on hover and selection.
 * Salvage/sell with 70% total investment refund.
+* Early-start rush rewards for beginning the next wave during the build timer.
 * Speed controls: 1x, 2x, Pause.
 * Sound toggle plus master, combat, build, and system SFX channel controls.
 * Endless Mode with procedurally scaling waves.

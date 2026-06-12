@@ -39,7 +39,7 @@ Do not copy Warcraft names, assets, icons, models, maps, factions, or lore. Use 
 8. Towers attack automatically.
 9. Defeated enemies award currency.
 10. Escaped enemies cost lives.
-11. Between waves, upgrade, demolish, or build more.
+11. Between waves, upgrade, demolish, adjust targeting, or build more.
 12. Clear authored waves or continue in Endless Mode.
 
 ## Current Mechanics
@@ -53,7 +53,7 @@ The current tower retheme preserves gameplay roles:
 * **Bounty Ballista**: slower heavy-hit tower.
 * **Frost Obelisk**: low-damage tower with slow effect.
 
-Each tower now has two or three upgrade tiers, and every tier offers two mutually exclusive choices.
+Each tower now has two or three upgrade tiers, and every tier offers two mutually exclusive choices. Once placed, towers can target First, Last, Strongest, or Weakest creeps, and their inspection panel tracks lifetime damage so players can compare real performance.
 
 ### Enemies
 
@@ -85,6 +85,8 @@ The economy is stored internally as Bolts and formatted into three denominations
 
 Demolish refunds 70% of total tower investment, including upgrades.
 
+Starting the next wave during the post-wave build timer grants a small rush reward in the same base-7 currency. This rewards confident planning without forcing fast play on cautious players.
+
 ### Progression
 
 * Three authored levels define starting money, lives, wave composition, and elite finale waves.
@@ -97,6 +99,9 @@ Demolish refunds 70% of total tower investment, including upgrades.
 * The board-first layout makes the game feel playable rather than like a UI mockup.
 * Range preview and sell/refund reduce frustration.
 * Compact stat comparisons make placement and upgrade choices easier to scan.
+* Targeting modes add tactical control without adding new tower types.
+* Lifetime damage counters make tower performance visible after a wave.
+* Early-start rewards make downtime an interesting risk/reward decision.
 * Speed controls support repeated play.
 * Particles, floating text, sound, and shake make combat readable and satisfying.
 * Existing tests make mechanics safer to change.

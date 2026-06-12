@@ -63,6 +63,38 @@ test("chooses an alternate upgrade branch", async ({ page }) => {
   expect(stats.upgrades).toEqual(["watchfire"]);
 });
 
+test("changes tower targeting mode and shows lifetime damage", async ({ page }) => {
+  await startGame(page);
+  await clickCell(page, 1, 0);
+  await expect(page.getByTestId("targeting-panel")).toContainText("First");
+  await expect(page.getByTestId("tower-damage")).toContainText("Damage Done");
+  await expect(page.getByTestId("tower-damage")).toContainText("0");
+
+  await page.getByTestId("target-mode-strongest").click();
+  await expect(page.getByTestId("target-mode-strongest")).toHaveClass(/active/);
+  expect(await page.evaluate(() => window.__game.engine.towers[0].targetingMode)).toBe("strongest");
+
+  await page.evaluate(() => {
+    window.__game.engine.towers[0].totalDamage = 42;
+    window.__game.refresh();
+  });
+  await expect(page.getByTestId("tower-damage")).toContainText("42");
+});
+
+test("shows and awards early-start rush gold", async ({ page }) => {
+  await startGame(page);
+  await page.evaluate(() => {
+    window.__game.engine.buildTimer = 10;
+    window.__game.refresh();
+  });
+  await expect(page.getByTestId("start-wave")).toContainText("+0C 2S 6B");
+
+  const before = await page.evaluate(() => window.__game.engine.money);
+  await page.getByTestId("start-wave").click();
+  expect(await page.evaluate(() => window.__game.engine.money)).toBe(before + 20);
+  await expect(page.getByTestId("start-wave")).toContainText("Start Wave");
+});
+
 test("starts a wave and advances combat state", async ({ page }) => {
   await startGame(page);
   await clickCell(page, 1, 0);

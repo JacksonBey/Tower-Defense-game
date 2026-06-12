@@ -50,6 +50,9 @@ Current coverage:
   * Confirms loss state when enemies escape.
   * Confirms sell/refund calculation.
   * Confirms speed multiplier and pause behavior.
+  * Confirms targeting mode validation and priority scoring.
+  * Confirms lifetime tower damage counters.
+  * Confirms early-start reward payout and build-timer countdown.
   * Confirms wave preview summaries.
   * Confirms armor, shields, and elite leak penalties.
   * Confirms alternate upgrade branch choices apply distinct stat changes and record history.
@@ -73,6 +76,8 @@ Current browser scenarios:
 * Next-wave preview displays wave number, reward, creep counts, and trait tags.
 * Player can inspect pre-placement stats, then place and upgrade a tower.
 * Player can choose an alternate upgrade branch and receive its counterplay stat.
+* Player can change tower targeting mode and see lifetime damage.
+* Player can see and collect an early-start rush reward.
 * Player can start a wave and observe combat progression.
 * Player can switch levels and see level-specific money/lives.
 * Player can inspect an authored finale preview with Elite Stoneback pressure.

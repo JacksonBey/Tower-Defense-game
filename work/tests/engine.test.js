@@ -1,6 +1,15 @@
 // Reference: SYSTEM.md#Unit-Testing
 import { describe, expect, it } from "vitest";
-import { applyUpgradeStats, GameEngine, hasTrait, isBuildable, isPath, summarizeWave } from "../src/engine.js";
+import {
+  applyUpgradeStats,
+  GameEngine,
+  TARGETING_MODES,
+  hasTrait,
+  isBuildable,
+  isPath,
+  summarizeWave,
+  targetPriorityValue
+} from "../src/engine.js";
 
 describe("engine", () => {
   it("knows path and build pad cells", () => {
@@ -14,8 +23,29 @@ describe("engine", () => {
     expect(game.placeTower("punch", 0, 2).ok).toBe(false);
     expect(game.placeTower("punch", 1, 0).ok).toBe(true);
     expect(game.money).toBe(58);
+    expect(game.towers[0].targetingMode).toBe("first");
+    expect(game.towers[0].totalDamage).toBe(0);
     expect(game.events).toContainEqual({ type: "place", tower: "punch", x: 1, y: 0 });
     expect(game.placeTower("punch", 1, 0).ok).toBe(false);
+  });
+
+  it("sets tower targeting modes and rejects unknown modes", () => {
+    const game = new GameEngine(1);
+    game.placeTower("punch", 1, 0);
+    expect(TARGETING_MODES).toEqual(["first", "last", "strongest", "weakest"]);
+    expect(game.setTowerTargeting(0, "strongest")).toEqual({ ok: true });
+    expect(game.towers[0].targetingMode).toBe("strongest");
+    expect(game.setTowerTargeting(0, "nearest").ok).toBe(false);
+    expect(game.setTowerTargeting(9, "first").ok).toBe(false);
+  });
+
+  it("scores targeting priorities for first, last, strongest, and weakest", () => {
+    const front = { hp: 30, shield: 0, progress: 4 };
+    const back = { hp: 80, shield: 8, progress: 1 };
+    expect(targetPriorityValue(front, "first")).toBeGreaterThan(targetPriorityValue(back, "first"));
+    expect(targetPriorityValue(front, "last")).toBeLessThan(targetPriorityValue(back, "last"));
+    expect(targetPriorityValue(back, "strongest")).toBeGreaterThan(targetPriorityValue(front, "strongest"));
+    expect(targetPriorityValue(front, "weakest")).toBeGreaterThan(targetPriorityValue(back, "weakest"));
   });
 
   it("upgrades towers in order", () => {
@@ -73,6 +103,59 @@ describe("engine", () => {
     for (let i = 0; i < 500 && game.status === "running"; i += 1) game.tick(0.1);
     expect(game.status).not.toBe("running");
     expect(game.money).toBeGreaterThan(before);
+  });
+
+  it("uses targeting mode during combat and tracks lifetime tower damage", () => {
+    const game = new GameEngine(1);
+    game.status = "running";
+    game.spawnIndex = game.level.waves[0].length;
+    game.towers = [{
+      id: "t1",
+      type: "punch",
+      x: 1,
+      y: 0,
+      level: 0,
+      cooldownLeft: 0,
+      targetingMode: "strongest",
+      totalDamage: 0,
+      stats: { damage: 10, range: 10, cooldown: 0.5, color: "#6f5138" }
+    }];
+    game.enemies = [
+      { id: "front", type: "chip", hp: 30, maxHp: 30, shield: 0, reward: 0, traits: [], progress: 4, slowTimer: 0, slowFactor: 0, markedTimer: 0 },
+      { id: "bulky", type: "chip", hp: 80, maxHp: 80, shield: 8, reward: 0, traits: [], progress: 1, slowTimer: 0, slowFactor: 0, markedTimer: 0 }
+    ];
+
+    game.tick(0.1);
+    expect(game.events.find((event) => event.type === "shoot").enemyId).toBe("bulky");
+    expect(game.towers[0].totalDamage).toBe(10);
+
+    game.towers[0].cooldownLeft = 0;
+    game.towers[0].targetingMode = "first";
+    game.tick(0.1);
+    expect(game.events.find((event) => event.type === "shoot").enemyId).toBe("front");
+    expect(game.towers[0].totalDamage).toBe(20);
+  });
+
+  it("pays early-start rewards during the post-wave build timer", () => {
+    const game = new GameEngine(1);
+    game.buildTimer = 10;
+    expect(game.getEarlyStartReward()).toBe(20);
+    const before = game.money;
+    const result = game.startWave();
+    expect(result).toEqual({ ok: true, earlyReward: 20 });
+    expect(game.money).toBe(before + 20);
+    expect(game.buildTimer).toBe(0);
+    expect(game.events).toContainEqual({ type: "earlyStart", reward: 20 });
+  });
+
+  it("counts down build timers only while building", () => {
+    const game = new GameEngine(1);
+    game.buildTimer = 5;
+    game.tick(1.25);
+    expect(game.buildTimer).toBeCloseTo(3.75);
+    game.status = "running";
+    game.tick(1);
+    expect(game.buildTimer).toBeCloseTo(3.75);
   });
 
   it("can lose when enemies escape", () => {

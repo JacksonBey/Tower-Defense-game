@@ -20,8 +20,8 @@ flowchart LR
 
 1. `data.js` defines static content: grid size, base path, build pads, enemies, levels, and tower branch upgrade data.
 2. `main.js` creates a `GameEngine`, renders controls, and forwards player actions.
-3. `engine.js` mutates simulation state in response to placement, branch upgrades, sell, start-wave, and tick events.
-4. `engine.js` emits short event objects such as `place`, `shoot`, `defeat`, `escape`, `sell`, and `waveClear`.
+3. `engine.js` mutates simulation state in response to placement, branch upgrades, targeting changes, sell, start-wave, and tick events.
+4. `engine.js` emits short event objects such as `place`, `targeting`, `earlyStart`, `shoot`, `defeat`, `escape`, `sell`, and `waveClear`.
 5. `engine.js` summarizes upcoming waves for the player-facing preview.
 6. `main.js` converts engine events into floating text, particles, shake, high-score updates, and sound triggers.
 7. `economy.js` formats all visible currency using the three denominations of 7.
@@ -32,7 +32,7 @@ flowchart LR
 ### Keep In `engine.js`
 
 * Money, lives, waves, wave index, spawn timers, enemies, towers, projectiles, events.
-* Tower placement, branching upgrades, sell/refund logic, target selection, damage, rewards, speed scaling, endless wave generation, win/loss state.
+* Tower placement, branching upgrades, targeting mode, lifetime damage, sell/refund logic, target selection, damage, early-start rewards, defeat rewards, speed scaling, endless wave generation, win/loss state.
 * Any future rule that should be independently testable.
 
 ### Keep In `main.js`
@@ -87,8 +87,9 @@ Contains deterministic gameplay rules:
 * Tower placement, branching upgrade choices, and sell/refund.
 * Wave start and enemy spawning.
 * Enemy motion along the path.
-* Tower target selection and projectile bookkeeping.
+* Tower target selection, First/Last/Strongest/Weakest targeting mode, lifetime tower damage counters, and projectile bookkeeping.
 * Damage, armor pierce, shield breaker, slow resistance bypass, hunter's marks, executions, shatter damage, multishot, splash damage, chain lightning, defeat rewards, elite escapes, lives, win/loss.
+* Post-wave build timer and early-start rush rewards.
 * Speed scaling through `speedMultiplier`.
 * Endless mode continuation after authored waves.
 * Next-wave summaries through `previewWave()` and `summarizeWave()`.
@@ -107,12 +108,17 @@ Important public fields used by UI/tests:
 * `message`
 * `speedMultiplier`
 * `endlessMode`
+* `buildTimer`
+
+Tower state includes `targetingMode` and `totalDamage`; keep both engine-owned so browser UI and tests read the same values.
 
 Upgrade helpers:
 
 * `getUpgradeOptions(indexOrTower)`: returns the available choices for a tower's next tier.
 * `upgradeTower(index, choiceIndex = 0)`: applies one mutually exclusive choice from the next tier.
 * `applyUpgradeStats(stats, upgrade)`: merges additive, max-valued, and boolean counterplay properties.
+* `setTowerTargeting(index, mode)`: sets `first`, `last`, `strongest`, or `weakest` targeting.
+* `getEarlyStartReward()`: returns the current raw Bolt amount for the start-wave reward UI to format with `formatMoney`.
 
 Prefer adding pure helpers when simulation rules become complicated. Keep UI state out of the engine.
 
@@ -152,8 +158,8 @@ The board should remain the dominant viewport element. Avoid adding large explan
 Coordinates the browser experience:
 
 * Writes the app shell markup.
-* Renders levels, towers, branching upgrade choices, next-wave preview, inspection, HUD, and enemy ledger.
-* Handles clicks, canvas hover, tower placement, upgrade choices, sell, speed, reset, sound, and endless toggle.
+* Renders levels, towers, targeting controls, branching upgrade choices, next-wave preview, inspection, HUD, and enemy ledger.
+* Handles clicks, canvas hover, tower placement, targeting changes, upgrade choices, sell, speed, reset, sound, and endless toggle.
 * Draws cells, path, endpoints, towers, enemies, projectiles, range previews, particles, and floating text.
 * Saves per-level high scores in `localStorage`.
 * Exposes `window.__game` for test inspection, including `engine`, static data, and `refresh()`.
@@ -205,6 +211,7 @@ Unit tests protect:
 * Currency denominations and affordability.
 * Legal path/build-pad detection.
 * Tower placement, branching upgrade, trait-counter stat merging, and sell/refund rules.
+* Targeting modes, early-start reward math, build-timer countdown, and lifetime damage counters.
 * Wave progression, enemy defeat rewards, loss state, and speed scaling.
 * Deterministic balance simulations for viable strategies and targeted counters.
 * Sound enabled-state and channel-volume persistence.
@@ -220,7 +227,9 @@ Browser scenarios protect player workflows:
 
 * Initial content loads.
 * Tower placement and branching upgrades.
+* Tower targeting controls and lifetime damage visibility.
 * Pre-placement and upgrade stat comparison visibility.
+* Early-start rush reward display and payout.
 * Starting and resolving a wave.
 * Level switching and reset values.
 * Invalid placement feedback.
