@@ -87,6 +87,8 @@ Demolish refunds 70% of total tower investment, including upgrades.
 
 Starting the next wave during the post-wave build timer grants a small rush reward in the same base-7 currency. This rewards confident planning without forcing fast play on cautious players.
 
+Clickable hidden gold chests can appear on safe terrain cells. They are small one-time bonuses meant to make the map feel alive without becoming a required economy line.
+
 ### Progression
 
 * Three authored levels define starting money, lives, wave composition, and elite finale waves.
@@ -102,8 +104,9 @@ Starting the next wave during the post-wave build timer grants a small rush rewa
 * Targeting modes add tactical control without adding new tower types.
 * Lifetime damage counters make tower performance visible after a wave.
 * Early-start rewards make downtime an interesting risk/reward decision.
+* Hidden map chests reward attention without interrupting the defense loop.
 * Speed controls support repeated play.
-* Particles, floating text, sound, and shake make combat readable and satisfying.
+* Particles, recoil pulses, floating text, sound, and shake make combat readable and satisfying.
 * Existing tests make mechanics safer to change.
 * Elite finale waves give each authored level a clearer end beat.
 

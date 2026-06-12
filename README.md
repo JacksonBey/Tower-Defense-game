@@ -22,6 +22,7 @@ The economy still uses awkward denominations of 7 for personality.
 * Tower range preview on hover and selection.
 * Salvage/sell with 70% total investment refund.
 * Early-start rush rewards for beginning the next wave during the build timer.
+* Hidden map gold chests that can be clicked for bonus base-7 currency.
 * Speed controls: 1x, 2x, Pause.
 * Sound toggle plus master, combat, build, and system SFX channel controls.
 * Endless Mode with procedurally scaling waves.
@@ -96,6 +97,7 @@ npm run test:all
 * `work/src/economy.js`: base-7 currency formatting.
 * `work/src/engine.js`: deterministic simulation and game rules.
 * `work/src/main.js`: DOM controls, canvas rendering, visual effects, high scores.
+* `work/src/mapSecrets.js`: deterministic decorative props and clickable gold chest rules.
 * `work/src/sound.js`: Web Audio sound system.
 * `work/src/styles.css`: fantasy RTS layout and responsive styling.
 

@@ -136,6 +136,32 @@ describe("engine", () => {
     expect(game.towers[0].totalDamage).toBe(20);
   });
 
+  it("sets and decays tower fire pulses for recoil animation", () => {
+    const game = new GameEngine(1);
+    game.status = "running";
+    game.spawnIndex = game.level.waves[0].length;
+    game.towers = [{
+      id: "t1",
+      type: "punch",
+      x: 1,
+      y: 0,
+      level: 0,
+      cooldownLeft: 0,
+      firePulse: 0,
+      targetingMode: "first",
+      totalDamage: 0,
+      stats: { damage: 10, range: 10, cooldown: 0.5, color: "#6f5138" }
+    }];
+    game.enemies = [
+      { id: "e1", type: "chip", hp: 30, maxHp: 30, shield: 0, reward: 0, traits: [], progress: 2, slowTimer: 0, slowFactor: 0, markedTimer: 0 }
+    ];
+
+    game.tick(0.1);
+    expect(game.towers[0].firePulse).toBeCloseTo(0.18);
+    game.tick(0.1);
+    expect(game.towers[0].firePulse).toBeCloseTo(0.08);
+  });
+
   it("pays early-start rewards during the post-wave build timer", () => {
     const game = new GameEngine(1);
     game.buildTimer = 10;

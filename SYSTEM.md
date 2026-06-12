@@ -7,6 +7,7 @@ Runehold TD is a small Vite application with a deterministic simulation core and
 ```mermaid
 flowchart LR
   Data["data.js: towers, enemies, levels, path"] --> Engine["engine.js: simulation"]
+  MapSecrets["mapSecrets.js: props and secrets"] --> Main
   Economy["economy.js: base-7 formatting"] --> Main["main.js: UI and rendering"]
   Engine --> Main
   Main --> Sound["sound.js: Web Audio cues"]
@@ -41,6 +42,11 @@ flowchart LR
 * Canvas drawing, hover state, selected tower state, range previews, endpoint labels.
 * Floating text, particles, camera shake, high-score persistence, sound dispatch.
 * Browser-only concerns such as `localStorage`, `AudioContext`, canvas sizing, and event listeners.
+
+### Keep In `mapSecrets.js`
+
+* Deterministic decorative prop generation.
+* Clickable map secret rules such as unopened/opened gold chests and their rewards.
 
 ### Keep In `data.js`
 
@@ -110,7 +116,7 @@ Important public fields used by UI/tests:
 * `endlessMode`
 * `buildTimer`
 
-Tower state includes `targetingMode` and `totalDamage`; keep both engine-owned so browser UI and tests read the same values.
+Tower state includes `targetingMode`, `totalDamage`, and `firePulse`; keep them engine-owned so browser UI and tests read the same values.
 
 Upgrade helpers:
 
@@ -136,6 +142,18 @@ Implements a small `SoundSystem` around the Web Audio API:
 
 Audio should remain optional. Gameplay must be fully understandable without sound.
 
+## Map-Secrets
+
+**File**: `work/src/mapSecrets.js`
+
+Owns deterministic map prop and secret rules:
+
+* `createMapProps({ levelId, cols, rows, isPath, isBuildable })`: creates decorative props plus one gold chest on a non-path, non-build cell.
+* `openGoldChest(props, x, y)`: opens a chest once and returns its raw Bolt reward.
+* `findPropAtCell(props, x, y, type)`: shared lookup helper for tests and UI.
+
+Keep map secret rules here instead of embedding them in canvas drawing. `main.js` should render the props and translate clicks into calls to these helpers.
+
 ## Visual-Styling
 
 **File**: `work/src/styles.css`
@@ -159,10 +177,10 @@ Coordinates the browser experience:
 
 * Writes the app shell markup.
 * Renders levels, towers, targeting controls, branching upgrade choices, next-wave preview, inspection, HUD, and enemy ledger.
-* Handles clicks, canvas hover, tower placement, targeting changes, upgrade choices, sell, speed, reset, sound, and endless toggle.
-* Draws cells, path, endpoints, towers, enemies, projectiles, range previews, particles, and floating text.
+* Handles clicks, canvas hover, tower placement, targeting changes, map chest openings, upgrade choices, sell, speed, reset, sound, and endless toggle.
+* Draws cells, path, endpoints, towers, map props, gold chests, enemies, projectiles, range previews, particles, recoil pulses, and floating text.
 * Saves per-level high scores in `localStorage`.
-* Exposes `window.__game` for test inspection, including `engine`, static data, and `refresh()`.
+* Exposes `window.__game` for test inspection, including `engine`, static data, `refresh()`, and `getMapProps()`.
 
 This file is currently the largest file. If it grows further, consider extracting rendering helpers or UI rendering into separate modules with new `SYSTEM.md` sections.
 
@@ -202,7 +220,7 @@ The Playwright config starts the dev server automatically for browser tests.
 
 ## Unit-Testing
 
-**Files**: `work/tests/data.test.js`, `work/tests/economy.test.js`, `work/tests/engine.test.js`, `work/tests/simulation.test.js`, `work/tests/sound.test.js`, `work/tests/statComparison.test.js`
+**Files**: `work/tests/data.test.js`, `work/tests/economy.test.js`, `work/tests/engine.test.js`, `work/tests/mapSecrets.test.js`, `work/tests/simulation.test.js`, `work/tests/sound.test.js`, `work/tests/statComparison.test.js`
 
 Unit tests protect:
 
@@ -211,7 +229,8 @@ Unit tests protect:
 * Currency denominations and affordability.
 * Legal path/build-pad detection.
 * Tower placement, branching upgrade, trait-counter stat merging, and sell/refund rules.
-* Targeting modes, early-start reward math, build-timer countdown, and lifetime damage counters.
+* Targeting modes, early-start reward math, build-timer countdown, lifetime damage counters, and tower recoil fire pulses.
+* Deterministic map secret generation and one-time chest opening.
 * Wave progression, enemy defeat rewards, loss state, and speed scaling.
 * Deterministic balance simulations for viable strategies and targeted counters.
 * Sound enabled-state and channel-volume persistence.
@@ -230,6 +249,7 @@ Browser scenarios protect player workflows:
 * Tower targeting controls and lifetime damage visibility.
 * Pre-placement and upgrade stat comparison visibility.
 * Early-start rush reward display and payout.
+* Hidden map chest click and payout.
 * Starting and resolving a wave.
 * Level switching and reset values.
 * Invalid placement feedback.

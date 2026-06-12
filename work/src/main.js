@@ -3,6 +3,7 @@ import "./styles.css";
 import { ENEMIES, GRID, LEVELS, PATH, TOWERS, CELL, BUILDABLE, TRAITS } from "./data.js";
 import { formatMoney } from "./economy.js";
 import { GameEngine, TARGETING_MODES, isPath, isBuildable } from "./engine.js";
+import { createMapProps, openGoldChest } from "./mapSecrets.js";
 import { SoundSystem } from "./sound.js";
 import { getTowerStatRows, getTowerCounterTags } from "./statComparison.js";
 
@@ -294,32 +295,13 @@ function drawLowLivesVignette() {
 let mapProps = [];
 
 function generateMapProps() {
-  mapProps = [];
-  const levelId = engine.level.id;
-  
-  for (let y = 0; y < GRID.rows; y += 1) {
-    for (let x = 0; x < GRID.cols; x += 1) {
-      if (!engine.isPath(x, y) && !engine.isBuildable(x, y)) {
-        const pseudoRand = Math.sin(x * 12.9898 + y * 78.233 + levelId * 45.164) * 43758.5453;
-        const r = pseudoRand - Math.floor(pseudoRand);
-        
-        if (r < 0.22) {
-          let propType = "grass_tuft";
-          if (r < 0.06) propType = "tree";
-          else if (r < 0.12) propType = "rock";
-          else if (r < 0.17) propType = "flower";
-          
-          mapProps.push({
-            x,
-            y,
-            type: propType,
-            scale: 0.85 + (r * 100 % 0.3),
-            variant: Math.floor(r * 1000) % 3
-          });
-        }
-      }
-    }
-  }
+  mapProps = createMapProps({
+    levelId: engine.level.id,
+    cols: GRID.cols,
+    rows: GRID.rows,
+    isPath: (x, y) => engine.isPath(x, y),
+    isBuildable: (x, y) => engine.isBuildable(x, y)
+  });
 }
 
 function drawMapProps() {
@@ -330,7 +312,31 @@ function drawMapProps() {
     ctx.translate(px, py);
     ctx.scale(prop.scale, prop.scale);
     
-    if (prop.type === "tree") {
+    if (prop.type === "gold_chest") {
+      ctx.globalAlpha = prop.opened ? 0.55 : 1;
+      ctx.fillStyle = prop.opened ? "rgba(120, 113, 108, 0.25)" : "rgba(252, 211, 77, 0.45)";
+      ctx.beginPath();
+      ctx.ellipse(0, 8, 16, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = prop.opened ? "#6b4a2e" : "#8b5a2b";
+      ctx.strokeStyle = "#21170f";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-13, -3, 26, 16, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = prop.opened ? "#3f2a1a" : "#f8c353";
+      ctx.fillRect(-12, -5, 24, 5);
+      ctx.strokeRect(-12, -5, 24, 5);
+
+      ctx.fillStyle = prop.opened ? "#a49980" : "#fff0a8";
+      ctx.fillRect(-2, 1, 4, 7);
+      ctx.fillStyle = prop.opened ? "#3f2a1a" : "#fcd34d";
+      ctx.fillRect(-10, -3, 4, 16);
+      ctx.fillRect(6, -3, 4, 16);
+    } else if (prop.type === "tree") {
       ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
       ctx.beginPath();
       ctx.ellipse(0, 14, 11, 4, 0, 0, Math.PI * 2);
@@ -911,12 +917,15 @@ function drawEndpoint(label, x, y, fill) {
 function drawTowerGraphic(tower, index) {
   const cx = tower.x * CELL + CELL / 2;
   const cy = tower.y * CELL + CELL / 2;
+  const pulse = Math.max(0, Math.min(1, (tower.firePulse ?? 0) / 0.18));
   ctx.save();
   ctx.translate(cx, cy);
   ctx.fillStyle = "rgba(255, 244, 190, 0.22)";
   ctx.beginPath();
-  ctx.arc(0, 0, 25, 0, Math.PI * 2);
+  ctx.arc(0, 0, 25 + pulse * 6, 0, Math.PI * 2);
   ctx.fill();
+  ctx.translate(0, -pulse * 4);
+  ctx.scale(1 + pulse * 0.04, 1 - pulse * 0.025);
   ctx.fillStyle = tower.stats.color;
   ctx.strokeStyle = selectedTowerIndex === index ? "#ffffff" : "#111827";
   ctx.lineWidth = selectedTowerIndex === index ? 5 : 3;
@@ -1678,6 +1687,19 @@ canvas.addEventListener("click", (event) => {
     return;
   }
 
+  const chestResult = openGoldChest(mapProps, x, y);
+  if (chestResult.ok) {
+    engine.money += chestResult.reward;
+    engine.message = `Hidden cache found: +${formatMoney(chestResult.reward)}.`;
+    selectedTowerIndex = -1;
+    sounds.play("defeat", 0.5, "static");
+    addFloatingText(x + 0.5, y + 0.15, `+${formatMoney(chestResult.reward)}`, "#ffe7a0");
+    addExplosion(x + 0.5, y + 0.5, "#fcd34d", 14);
+    spawnCoinParticles(x + 0.5, y + 0.5, 8);
+    refresh();
+    return;
+  }
+
   const existing = engine.towers.findIndex((tower) => tower.x === x && tower.y === y);
   if (existing >= 0) {
     selectedTowerIndex = existing;
@@ -1742,7 +1764,7 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-window.__game = { engine, TOWERS, LEVELS, refresh, renderControls };
+window.__game = { engine, TOWERS, LEVELS, refresh, renderControls, getMapProps: () => mapProps };
 
 // Initialize volume sliders from persisted state
 app.querySelectorAll("[data-volume-channel]").forEach((input) => {

@@ -157,6 +157,7 @@ export class GameEngine {
       level: 0,
       upgradeHistory: [],
       cooldownLeft: 0,
+      firePulse: 0,
       targetingMode: "first",
       totalDamage: 0,
       stats: { ...blueprint }
@@ -366,6 +367,7 @@ export class GameEngine {
     this.enemies = this.enemies.filter((enemy) => enemy.progress < path.length - 1);
 
     for (const tower of this.towers) {
+      tower.firePulse = Math.max(0, (tower.firePulse ?? 0) - adjustedDt);
       tower.cooldownLeft -= adjustedDt;
       if (tower.cooldownLeft > 0) continue;
       const origin = { x: tower.x + 0.5, y: tower.y + 0.5 };
@@ -461,6 +463,7 @@ export class GameEngine {
         this.events.push({ type: "shoot", tower: tower.type, targetX: targetPos.x, targetY: targetPos.y, damage: hit.damage, absorbed: hit.absorbed, enemyId: target.id });
       }
 
+      tower.firePulse = 0.18;
       tower.cooldownLeft = tower.stats.cooldown;
     }
 

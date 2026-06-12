@@ -95,6 +95,17 @@ test("shows and awards early-start rush gold", async ({ page }) => {
   await expect(page.getByTestId("start-wave")).toContainText("Start Wave");
 });
 
+test("opens a hidden map chest for bonus gold", async ({ page }) => {
+  await startGame(page);
+  const chest = await page.evaluate(() => window.__game.getMapProps().find((prop) => prop.type === "gold_chest"));
+  const before = await page.evaluate(() => window.__game.engine.money);
+
+  await clickCell(page, chest.x, chest.y);
+  await expect(page.getByTestId("message")).toContainText("Hidden cache found");
+  expect(await page.evaluate(() => window.__game.engine.money)).toBe(before + chest.reward);
+  expect(await page.evaluate(() => window.__game.getMapProps().find((prop) => prop.type === "gold_chest").opened)).toBe(true);
+});
+
 test("starts a wave and advances combat state", async ({ page }) => {
   await startGame(page);
   await clickCell(page, 1, 0);

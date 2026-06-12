@@ -4,7 +4,6 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Now
 
-- `[ ]` Task 10: Advanced Canvas Animations & Interactive Map Secrets (firing/recoil tower animations, click triggers on map props, random gold chest spawns).
 - `[ ]` Task 11: Rich Ambient Audio & Codex Panels (ambient map loops, Creep Codex details overlay, toggleable coordinate grid).
 - `[ ]` Task 12: E2E and Unit Tests for new AAA features.
 
@@ -23,6 +22,7 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Completed Work
 
+- [x] Added advanced canvas animation and map secrets: engine-backed tower fire pulses for recoil, deterministic decorative prop generation, clickable hidden gold chests, bonus-gold feedback, and unit/E2E coverage (June 12, 2026).
 - [x] Added AAA tower targeting and strategic controls: First/Last/Strongest/Weakest tower priorities, lifetime damage counters in the inspection panel, post-wave build timers, and early-start rush rewards, with unit and E2E coverage (June 12, 2026).
 - [x] Overhauled the UI with an immersive Main Menu/Title Screen warpath selector, custom Victory and Defeat overlay screens with stats breakdown, active player Hero Spells (Meteor Strike & Frost Nova), keyboard hotkeys, creep walk angle rotation, scale bobbing, themed projectiles (boulders, spears, ice crystals), status effect overlays, and decorative environmental map props, with full E2E coverage (June 12, 2026).
 

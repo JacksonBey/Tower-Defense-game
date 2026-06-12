@@ -52,6 +52,7 @@ Current coverage:
   * Confirms speed multiplier and pause behavior.
   * Confirms targeting mode validation and priority scoring.
   * Confirms lifetime tower damage counters.
+  * Confirms tower fire pulses for recoil animation.
   * Confirms early-start reward payout and build-timer countdown.
   * Confirms wave preview summaries.
   * Confirms armor, shields, and elite leak penalties.
@@ -61,6 +62,9 @@ Current coverage:
   * Confirms at least three deterministic Level 1 build strategies can clear.
   * Confirms a weak Level 2 coverage plan leaks.
   * Confirms Shield Breaker counters shielded acolytes efficiently.
+* `mapSecrets.test.js`
+  * Confirms deterministic map prop generation creates one unopened gold chest.
+  * Confirms gold chests open once and reject non-chest cells.
 
 ## E2E Tests
 
@@ -78,6 +82,7 @@ Current browser scenarios:
 * Player can choose an alternate upgrade branch and receive its counterplay stat.
 * Player can change tower targeting mode and see lifetime damage.
 * Player can see and collect an early-start rush reward.
+* Player can click a hidden map chest and receive bonus gold.
 * Player can start a wave and observe combat progression.
 * Player can switch levels and see level-specific money/lives.
 * Player can inspect an authored finale preview with Elite Stoneback pressure.
