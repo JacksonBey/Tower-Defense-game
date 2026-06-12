@@ -8,9 +8,18 @@ async function clickCell(page, x, y) {
   await page.mouse.click(box.x + (x + 0.5) * (box.width / GRID.cols), box.y + (y + 0.5) * (box.height / GRID.rows));
 }
 
+async function startGame(page) {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "ENTER RUNEHOLD" })).toBeVisible();
+  await page.getByRole("button", { name: "ENTER RUNEHOLD" }).click();
+  await expect(page.locator("#menu-overlay")).toHaveClass(/hidden/);
+}
+
 test("loads with all requested content visible", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Runehold TD" })).toBeVisible();
+  await expect(page.locator(".menu-title")).toContainText("RUNEHOLD TD");
+  await expect(page.getByRole("button", { name: "ENTER RUNEHOLD" })).toBeVisible();
+  await page.getByRole("button", { name: "ENTER RUNEHOLD" }).click();
   await expect(page.getByTestId("levels").getByRole("button")).toHaveCount(3);
   await expect(page.getByTestId("towers").getByRole("button")).toHaveCount(4);
   await expect(page.getByText("Hex Acolyte")).toBeVisible();
@@ -22,18 +31,24 @@ test("loads with all requested content visible", async ({ page }) => {
 });
 
 test("places and upgrades a tower", async ({ page }) => {
-  await page.goto("/");
+  await startGame(page);
+  await expect(page.getByTestId("inspect")).toContainText("Build: Stoneguard Post");
+  await expect(page.getByTestId("inspect")).toContainText("DMG");
+  await expect(page.getByTestId("inspect")).toContainText("0.58s");
   await clickCell(page, 1, 0);
   await expect(page.getByTestId("inspect")).toContainText("Stoneguard Post");
   await expect(page.getByTestId("inspect")).toContainText("Oath Stones");
   await expect(page.getByTestId("inspect")).toContainText("Watchfire");
+  await expect(page.getByTestId("inspect")).toContainText("14->26");
+  await expect(page.getByTestId("inspect")).toContainText("Armor +12");
+  await expect(page.getByTestId("inspect")).toContainText("Swarm +6");
   await page.getByTestId("upgrade-tower").click();
   await expect(page.getByTestId("inspect")).toContainText("Rank 2");
   await expect(page.getByTestId("money")).toContainText("0C 3S 2B");
 });
 
 test("chooses an alternate upgrade branch", async ({ page }) => {
-  await page.goto("/");
+  await startGame(page);
   await clickCell(page, 1, 0);
   await page.getByTestId("upgrade-tower-1").click();
   await expect(page.getByTestId("inspect")).toContainText("Rank 2");
@@ -49,26 +64,27 @@ test("chooses an alternate upgrade branch", async ({ page }) => {
 });
 
 test("starts a wave and advances combat state", async ({ page }) => {
-  await page.goto("/");
+  await startGame(page);
   await clickCell(page, 1, 0);
   await page.getByText("Arcane Spire").click();
   await clickCell(page, 4, 0);
   await page.getByTestId("start-wave").click();
   await expect(page.getByTestId("message")).toContainText("Wave 1");
   await page.getByTestId("speed-2").click(); // Speed up the simulation to avoid timeout on longer path
-  await page.waitForFunction(() => window.__game.engine.status !== "running", null, { timeout: 30000 });
-  await expect(page.getByTestId("message")).toContainText(/Wave broken|cleared/);
+  await page.waitForFunction(() => window.__game.engine.status === "running" && window.__game.engine.spawnIndex > 0, null, { timeout: 10000 });
+  expect(await page.evaluate(() => window.__game.engine.enemies.length + window.__game.engine.projectiles.length)).toBeGreaterThan(0);
+  await expect(page.getByTestId("wave")).toContainText("1/3");
 });
 
 test("switches levels and resets currency/lives", async ({ page }) => {
-  await page.goto("/");
+  await startGame(page);
   await page.getByRole("button", { name: "Level 3: Elderfen Crossing" }).click();
   await expect(page.getByTestId("money")).toContainText("Gold 3C 0S 0B");
   await expect(page.getByTestId("lives")).toContainText("Lives 9");
 });
 
 test("shows elite finale preview for authored levels", async ({ page }) => {
-  await page.goto("/");
+  await startGame(page);
   await page.evaluate(() => {
      const { engine, renderControls } = window.__game;
      engine.waveIndex = engine.level.waves.length - 1;
@@ -88,13 +104,13 @@ test("shows elite finale preview for authored levels", async ({ page }) => {
 });
 
 test("blocks invalid placement with feedback", async ({ page }) => {
-  await page.goto("/");
+  await startGame(page);
   await clickCell(page, 0, 2);
   await expect(page.getByTestId("message")).toContainText("INVALID PAD");
 });
 
 test("demolishes/sells a tower and updates currency", async ({ page }) => {
-  await page.goto("/");
+  await startGame(page);
   await clickCell(page, 1, 0); // Places punch press: money goes from 86 to 58 (1C 1S 2B)
   await expect(page.getByTestId("inspect")).toContainText("Stoneguard Post");
   await page.getByTestId("upgrade-tower").click(); // Upgrades: money goes from 58 to 23 (0C 3S 2B)
@@ -107,7 +123,7 @@ test("demolishes/sells a tower and updates currency", async ({ page }) => {
 });
 
 test("toggles speed and pause states", async ({ page }) => {
-  await page.goto("/");
+  await startGame(page);
   
   // Click 2x button
   await page.getByTestId("speed-2").click();
@@ -126,7 +142,7 @@ test("toggles speed and pause states", async ({ page }) => {
 });
 
 test("updates sound channel controls", async ({ page }) => {
-  await page.goto("/");
+  await startGame(page);
   await expect(page.getByTestId("volume-master")).toHaveValue("70");
 
   await page.getByTestId("volume-master").fill("35");

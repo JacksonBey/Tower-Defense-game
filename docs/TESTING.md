@@ -39,6 +39,9 @@ Current coverage:
 * `sound.test.js`
   * Confirms sound enabled state and channel volumes persist.
   * Confirms cue playback uses master and category volume.
+* `statComparison.test.js`
+  * Confirms baseline tower stat formatting for placement.
+  * Confirms upgrade gains, tradeoffs, and counterplay tags.
 * `engine.test.js`
   * Confirms path/build-pad legality.
   * Confirms placement rules and currency charges.
@@ -68,7 +71,7 @@ Current browser scenarios:
 
 * Initial game content loads.
 * Next-wave preview displays wave number, reward, creep counts, and trait tags.
-* Player can place and upgrade a tower.
+* Player can inspect pre-placement stats, then place and upgrade a tower.
 * Player can choose an alternate upgrade branch and receive its counterplay stat.
 * Player can start a wave and observe combat progression.
 * Player can switch levels and see level-specific money/lives.

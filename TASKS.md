@@ -4,11 +4,8 @@ This queue tracks project work at a product level. Keep the top section small an
 
 ## Now
 
-- [/] Move path and build pads into per-level configuration so each level has distinct geometry. (In progress by Gemini)
-
 ## Next
 
-- `[ ]` Add compact tower stat comparison before placement and before upgrade selection.
 - `[ ]` Add damage types and tower/enemy counter rules.
 - `[ ]` Add an area-of-effect Mortar tower once enemy traits exist.
 - `[ ]` Improve Endless Mode UI with current endless wave, best wave, and upcoming generated wave preview.
@@ -16,14 +13,16 @@ This queue tracks project work at a product level. Keep the top section small an
 ## Later
 
 - `[ ]` Add a background grid-line animation that does not reduce board readability.
-- `[ ]` Add title, level-complete, and game-over screens.
-- `[ ]` Add keyboard shortcuts for speed, pause, sell, and start wave.
 - `[ ]` Add touch-friendly mobile placement/inspection improvements.
 - `[ ]` Add exportable balance report generated from simulation tests.
 - `[ ]` Consider global leaderboards only after local strategy depth is stable.
 
 ## Completed Work
 
+- [x] Overhauled the UI with an immersive Main Menu/Title Screen warpath selector, custom Victory and Defeat overlay screens with stats breakdown, active player Hero Spells (Meteor Strike & Frost Nova), keyboard hotkeys, creep walk angle rotation, scale bobbing, themed projectiles (boulders, spears, ice crystals), status effect overlays, and decorative environmental map props, with full E2E coverage (June 12, 2026).
+
+- [x] Moved path and build pads into per-level configurations so each level (Briar Glen, Mossgate Ford, Elderfen Crossing) has distinct, continuous geometries and build plots, with full unit test coverage (June 12, 2026).
+- [x] Added compact tower stat comparisons showing deltas and new trait badges before placement and before upgrade selection, with full unit test coverage (June 12, 2026).
 - [x] Overhauled audio engine to synthesize specialized sound effects per tower and creep type (stone rumbles, magic chirps, plucks, high-pass shatters) and integrated browser-native SpeechSynthesis narrator for cinematic level intros, wave start announcements, elite warnings, and low-lives alerts (June 11, 2026).
 - [x] Added elite finale waves to all three authored levels, surfaced a Finale badge in the wave preview, and covered the data, engine preview, and browser scenario (June 11, 2026).
 - [x] Implemented channel-specific volume controls (Master, Combat, Build, System) with range sliders, localStorage state persistence, environment checks, and unit/E2E coverage (June 11, 2026).

@@ -4,6 +4,7 @@ import { ENEMIES, GRID, LEVELS, PATH, TOWERS, CELL, BUILDABLE, TRAITS } from "./
 import { formatMoney } from "./economy.js";
 import { GameEngine, isPath, isBuildable } from "./engine.js";
 import { SoundSystem } from "./sound.js";
+import { getTowerStatRows, getTowerCounterTags } from "./statComparison.js";
 
 import punchIconUrl from "./assets/stoneguard_post_icon.png";
 import radioIconUrl from "./assets/arcane_spire_icon.png";
@@ -33,6 +34,16 @@ let floatingTexts = [];
 let particles = [];
 let shakeTimer = 0;
 let firstAnnounce = false;
+let rangeDashOffset = 0;
+let bannerText = "";
+let bannerSubtext = "";
+let bannerTimer = 0;
+let bannerMaxTimer = 0;
+let bannerColor = "#ffe7a0";
+let gameState = "menu";
+let activeSpell = null;
+let meteorCooldown = 0;
+let frostCooldown = 0;
 
 function announceLevel(levelId) {
   if (levelId === 1) {
@@ -92,6 +103,17 @@ app.innerHTML = `
         </div>
         <h2>Next Wave</h2>
         <div class="wave-preview" data-testid="wave-preview"></div>
+        <h2>Hero Spells</h2>
+        <div class="spell-list">
+          <button class="spell-btn" id="spell-meteor" data-spell="meteor" data-testid="spell-meteor">
+            <strong>Meteor Strike</strong>
+            <span>25 Gold · CD: 20s</span>
+          </button>
+          <button class="spell-btn" id="spell-frost" data-spell="frost" data-testid="spell-frost">
+            <strong>Frost Nova</strong>
+            <span>30 Gold · CD: 30s</span>
+          </button>
+        </div>
         <h2>Build Towers</h2>
         <div class="tower-list" data-testid="towers"></div>
         <button class="start" data-testid="start-wave">Start Wave</button>
@@ -108,6 +130,39 @@ app.innerHTML = `
       </aside>
     </section>
   </main>
+
+  <!-- Title/Main Menu Overlay -->
+  <div id="menu-overlay" class="menu-overlay">
+    <div class="menu-panel">
+      <div class="menu-title">RUNEHOLD TD</div>
+      <p class="menu-tagline">Defend the ancient kingdom lanes against the creep onslaught.</p>
+      <div class="menu-levels-box">
+        <h3>Select a War Path</h3>
+        <div class="menu-level-cards" id="menu-level-cards"></div>
+      </div>
+      <div class="menu-start-row">
+        <button id="menu-start-btn" class="menu-start-btn">ENTER RUNEHOLD</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Overlay -->
+  <div id="game-over-overlay" class="game-over-overlay hidden">
+    <div class="game-over-panel">
+      <h2 id="game-over-title">VICTORY</h2>
+      <p id="game-over-subtitle">The hold stands strong!</p>
+      <div class="game-over-stats">
+        <div class="stat-box"><b>Level</b><span id="stat-level-name">-</span></div>
+        <div class="stat-box"><b>Wave Reached</b><span id="stat-wave-reached">-</span></div>
+        <div class="stat-box"><b>Gold Earned</b><span id="stat-gold-earned">-</span></div>
+      </div>
+      <div class="game-over-actions">
+        <button id="game-over-action-btn" class="game-over-btn active">NEXT LEVEL</button>
+        <button id="game-over-retry-btn" class="game-over-btn">RETRY</button>
+        <button id="game-over-menu-btn" class="game-over-btn">MAIN MENU</button>
+      </div>
+    </div>
+  </div>
 `;
 
 const canvas = app.querySelector("canvas");
@@ -129,6 +184,231 @@ function saveHighScore(levelId, waveIndex) {
   const currentMax = Number(localStorage.getItem(key) ?? 0);
   if (waveIndex > currentMax) {
     localStorage.setItem(key, waveIndex);
+  }
+}
+
+function spawnTowerParticles(x, y, towerType, count = 15) {
+  const blueprint = TOWERS[towerType];
+  const color = blueprint ? blueprint.color : "#d7b878";
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.5 + Math.random() * 1.5;
+    particles.push({
+      x: x + 0.5,
+      y: y + 0.5,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.4,
+      size: 3 + Math.random() * 4,
+      color: color,
+      life: 0.35 + Math.random() * 0.35,
+      maxLife: 0.7
+    });
+  }
+}
+
+function spawnCoinParticles(x, y, count = 5) {
+  for (let i = 0; i < count; i++) {
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.1;
+    const speed = 0.6 + Math.random() * 1.2;
+    particles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 4 + Math.random() * 3,
+      color: "#f0c45c",
+      life: 0.45 + Math.random() * 0.25,
+      maxLife: 0.7
+    });
+  }
+}
+
+function showBanner(text, subtext, duration = 2.0, color = "#ffe7a0") {
+  bannerText = text;
+  bannerSubtext = subtext;
+  bannerTimer = duration;
+  bannerMaxTimer = duration;
+  bannerColor = color;
+}
+
+function drawBanner() {
+  if (bannerTimer <= 0) return;
+  
+  ctx.save();
+  const halfDuration = bannerMaxTimer / 2;
+  const opacity = bannerTimer > halfDuration 
+    ? (bannerMaxTimer - bannerTimer) / (bannerMaxTimer - halfDuration) 
+    : bannerTimer / halfDuration;
+    
+  ctx.globalAlpha = Math.min(1.0, opacity * 1.25);
+  
+  ctx.fillStyle = "rgba(18, 12, 8, 0.82)";
+  ctx.fillRect(0, canvas.height / 2 - 50, canvas.width, 100);
+  ctx.strokeStyle = bannerColor;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2 - 50);
+  ctx.lineTo(canvas.width, canvas.height / 2 - 50);
+  ctx.moveTo(0, canvas.height / 2 + 50);
+  ctx.lineTo(canvas.width, canvas.height / 2 + 50);
+  ctx.stroke();
+  
+  ctx.font = "900 24px 'Cinzel', Georgia, serif";
+  ctx.fillStyle = bannerColor;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.strokeText(bannerText, canvas.width / 2, canvas.height / 2 - 12);
+  ctx.fillText(bannerText, canvas.width / 2, canvas.height / 2 - 12);
+  
+  ctx.font = "bold 13px 'Outfit', sans-serif";
+  ctx.fillStyle = "#f7dfad";
+  ctx.strokeText(bannerSubtext, canvas.width / 2, canvas.height / 2 + 20);
+  ctx.fillText(bannerSubtext, canvas.width / 2, canvas.height / 2 + 20);
+  
+  ctx.restore();
+}
+
+function drawLowLivesVignette() {
+  if (engine.lives <= 0 || engine.lives > 2) return;
+  
+  ctx.save();
+  const pulse = 0.25 + 0.15 * Math.sin(performance.now() / 150);
+  const grad = ctx.createRadialGradient(
+    canvas.width / 2, canvas.height / 2, canvas.width / 4,
+    canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+  );
+  grad.addColorStop(0, "rgba(165, 61, 45, 0)");
+  grad.addColorStop(1, `rgba(165, 61, 45, ${pulse})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+}
+
+let mapProps = [];
+
+function generateMapProps() {
+  mapProps = [];
+  const levelId = engine.level.id;
+  
+  for (let y = 0; y < GRID.rows; y += 1) {
+    for (let x = 0; x < GRID.cols; x += 1) {
+      if (!engine.isPath(x, y) && !engine.isBuildable(x, y)) {
+        const pseudoRand = Math.sin(x * 12.9898 + y * 78.233 + levelId * 45.164) * 43758.5453;
+        const r = pseudoRand - Math.floor(pseudoRand);
+        
+        if (r < 0.22) {
+          let propType = "grass_tuft";
+          if (r < 0.06) propType = "tree";
+          else if (r < 0.12) propType = "rock";
+          else if (r < 0.17) propType = "flower";
+          
+          mapProps.push({
+            x,
+            y,
+            type: propType,
+            scale: 0.85 + (r * 100 % 0.3),
+            variant: Math.floor(r * 1000) % 3
+          });
+        }
+      }
+    }
+  }
+}
+
+function drawMapProps() {
+  for (const prop of mapProps) {
+    const px = prop.x * CELL + CELL / 2;
+    const py = prop.y * CELL + CELL / 2;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.scale(prop.scale, prop.scale);
+    
+    if (prop.type === "tree") {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+      ctx.beginPath();
+      ctx.ellipse(0, 14, 11, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = "#5c4033";
+      ctx.fillRect(-3, 6, 6, 9);
+      
+      ctx.fillStyle = prop.variant === 0 ? "#1e3f20" : prop.variant === 1 ? "#2d5a27" : "#1b4d3e";
+      ctx.strokeStyle = "#0d1a0e";
+      ctx.lineWidth = 1.5;
+      
+      // Tier 3
+      ctx.beginPath();
+      ctx.moveTo(0, -18); ctx.lineTo(-14, 4); ctx.lineTo(14, 4); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      
+      // Tier 2
+      ctx.beginPath();
+      ctx.moveTo(0, -9); ctx.lineTo(-11, 9); ctx.lineTo(11, 9); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      
+      // Tier 1
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(-8, 14); ctx.lineTo(8, 14); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      
+    } else if (prop.type === "rock") {
+      ctx.fillStyle = prop.variant === 0 ? "#78716c" : "#57534e";
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-10, 8);
+      ctx.lineTo(-12, 0);
+      ctx.lineTo(-4, -10);
+      ctx.lineTo(6, -8);
+      ctx.lineTo(12, 2);
+      ctx.lineTo(8, 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      
+      ctx.strokeStyle = "#a8a29e";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-8, -2);
+      ctx.lineTo(-3, -7);
+      ctx.lineTo(3, -5);
+      ctx.stroke();
+      
+    } else if (prop.type === "flower") {
+      ctx.fillStyle = prop.variant === 0 ? "#ef4444" : "#f59e0b";
+      ctx.beginPath();
+      const drawPetal = (ox, oy) => {
+        ctx.beginPath();
+        ctx.arc(ox, oy, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      };
+      drawPetal(-3, -2);
+      drawPetal(3, -2);
+      drawPetal(0, 3);
+      
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(0, 0, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.strokeStyle = "#16a34a";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 3);
+      ctx.quadraticCurveTo(-2, 7, -3, 11);
+      ctx.stroke();
+      
+    } else {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-5, 6); ctx.lineTo(-8, -2);
+      ctx.moveTo(0, 8); ctx.lineTo(0, -6);
+      ctx.moveTo(4, 7); ctx.lineTo(6, -1);
+      ctx.stroke();
+    }
+    
+    ctx.restore();
   }
 }
 
@@ -221,10 +501,16 @@ function processEvents(events) {
       const text = event.damage > 0 ? `-${event.damage}` : "Ward";
       addFloatingText(event.targetX, event.targetY - 0.2, text, event.damage > 0 ? "#f35f5f" : "#78c7e8");
       addExplosion(event.targetX, event.targetY, "#111827", 3);
+      
+      const targetEnemy = engine.enemies.find(e => e.id === event.enemyId);
+      if (targetEnemy) {
+        targetEnemy.flashTimer = 0.08;
+      }
     } else if (event.type === "defeat") {
       sounds.play(event.type, 1.0, event.enemy);
       addFloatingText(event.x, event.y - 0.4, `+${formatMoney(event.reward)}`, "#ea580c");
       addExplosion(event.x, event.y, ENEMIES[event.enemy].color, 10);
+      spawnCoinParticles(event.x, event.y, 6);
     } else if (event.type === "escape") {
       sounds.play(event.type);
       shakeTimer = 0.35;
@@ -240,23 +526,30 @@ function processEvents(events) {
     } else if (event.type === "wave") {
       sounds.play(event.type);
       sounds.speak(`Wave ${engine.waveIndex + 1} approaches!`);
+      showBanner(`WAVE ${engine.waveIndex + 1}`, "THE ONSLAUGHT BEGINS", 2.2, "#fca5a5");
     } else if (event.type === "won") {
       sounds.play(event.type);
       sounds.speak("Runehold stands victorious!");
+      showBanner("VICTORY", "THE HOLD STANDS STRONG", 4.0, "#ffe7a0");
       needsScoreSave = true;
     } else if (event.type === "lost") {
       sounds.play(event.type);
       sounds.speak("Defeat. The hold has fallen.");
+      showBanner("DEFEAT", "THE RUNEHOLD HAS FALLEN", 4.0, "#fca5a5");
       needsScoreSave = true;
     } else if (event.type === "waveClear") {
       sounds.play(event.type);
+      showBanner(`WAVE ${engine.waveIndex} CLEARED`, "GOLD REWARDS GRANTED", 2.2, "#b7d7c3");
       needsScoreSave = true;
     } else if (event.type === "place") {
       sounds.play(event.type, 1.0, event.tower);
+      spawnTowerParticles(event.x, event.y, event.tower, 12);
     } else if (event.type === "upgrade") {
       sounds.play(event.type, 1.0, event.tower);
+      spawnTowerParticles(event.x, event.y, event.tower, 15);
     } else if (event.type === "sell") {
       sounds.play(event.type, 1.0, event.tower);
+      spawnTowerParticles(event.x, event.y, event.tower, 18);
     } else {
       sounds.play(event.type);
     }
@@ -376,6 +669,24 @@ function renderTraitChips(traits) {
   return (traits ?? []).map((trait) => `<span class="trait-chip">${TRAITS[trait]?.label ?? trait}</span>`).join("");
 }
 
+function renderStatRows(stats, upgrade = null, compact = false) {
+  return `
+    <div class="${compact ? "stat-strip compact" : "stat-strip"}">
+      ${getTowerStatRows(stats, upgrade).map((row) => `
+        <span class="${row.changed ? (row.favorable ? "gain" : "tradeoff") : ""}">
+          <b>${row.label}</b>
+          ${row.changed ? `${row.before}->${row.after}` : row.after}
+        </span>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderCounterTags(stats, upgrade = null) {
+  const tags = getTowerCounterTags(stats, upgrade);
+  return tags.length ? `<div class="counter-tags">${tags.map((tag) => `<span>${tag}</span>`).join("")}</div>` : "";
+}
+
 function renderWavePreview() {
   const preview = engine.previewWave();
   const wave = engine.level.waves[engine.waveIndex];
@@ -425,6 +736,8 @@ function renderControls() {
       <div class="tower-btn-meta">
         <strong>${tower.name}</strong><span>${formatMoney(tower.cost)}</span>
       </div>
+      ${renderStatRows(tower, null, true)}
+      ${renderCounterTags(tower)}
     </button>
   `).join("");
   app.querySelector(".enemy-list").innerHTML = Object.keys(ENEMIES).map((key) => {
@@ -462,7 +775,7 @@ function renderHud() {
 
   const selected = engine.towers[selectedTowerIndex];
   const nextOptions = selected ? engine.getUpgradeOptions(selected) : [];
-  const nextKey = selected ? `${selected.id}-${selected.level}-${engine.money}` : "empty";
+  const nextKey = selected ? `${selected.id}-${selected.level}-${engine.money}` : `build-${selectedTowerType}-${engine.money}`;
   if (nextKey === inspectKey) return;
   inspectKey = nextKey;
   
@@ -476,7 +789,8 @@ function renderHud() {
   app.querySelector("[data-testid='inspect']").innerHTML = selected ? `
     <h2>${selected.stats.name}</h2>
     <p>Rank ${selected.level + 1} / ${TOWERS[selected.type].upgrades.length + 1}</p>
-    <p>Damage ${selected.stats.damage} Range ${selected.stats.range.toFixed(1)}</p>
+    ${renderStatRows(selected.stats)}
+    ${renderCounterTags(selected.stats)}
     <div class="upgrade-list">
       ${nextOptions.length ? nextOptions.map((option, index) => `
         <button
@@ -484,11 +798,19 @@ function renderHud() {
           data-upgrade-choice="${index}">
           <strong>${option.name}</strong>
           <span>${formatMoney(option.cost)} · ${option.summary}</span>
+          ${renderStatRows(selected.stats, option, true)}
+          ${renderCounterTags(selected.stats, option)}
         </button>
       `).join("") : `<button data-testid="upgrade-tower" disabled>Fully Upgraded</button>`}
       <button data-testid="sell-tower" class="demolish">Salvage: +${refundText}</button>
     </div>
-  ` : `<h2>Command</h2><p>Select a build plot or tower.</p>`;
+  ` : (selectedTowerType ? `
+    <h2>Build: ${TOWERS[selectedTowerType].name}</h2>
+    <p>Cost: ${formatMoney(TOWERS[selectedTowerType].cost)}</p>
+    ${renderStatRows(TOWERS[selectedTowerType])}
+    ${renderCounterTags(TOWERS[selectedTowerType])}
+    <p class="build-hint">Select a build plot to place.</p>
+  ` : `<h2>Command</h2><p>Select a build plot or tower.</p>`);
 }
 
 function drawCell(x, y, fill, stroke = THEME.ink) {
@@ -653,13 +975,39 @@ function drawEnemyGraphic(enemy) {
   ctx.save();
   ctx.translate(x, y);
 
-  // 1. Draw base shadow
+  // 1. Calculate direction of travel
+  const path = engine.level.path ?? PATH;
+  const seg = Math.min(Math.floor(enemy.progress), path.length - 1);
+  const next = Math.min(seg + 1, path.length - 1);
+  let dx = 0;
+  let dy = 0;
+  if (next !== seg) {
+    dx = path[next][0] - path[seg][0];
+    dy = path[next][1] - path[seg][1];
+  } else if (seg > 0) {
+    dx = path[seg][0] - path[seg - 1][0];
+    dy = path[seg][1] - path[seg - 1][1];
+  } else {
+    dx = 1;
+    dy = 0;
+  }
+  const angle = Math.atan2(dy, dx);
+  ctx.rotate(angle + Math.PI / 2);
+
+  // 2. Apply walking stride bobbing (squash & stretch)
+  const speed = ENEMIES[enemy.type]?.speed ?? 1.0;
+  const walkCycle = performance.now() * 0.015 * speed;
+  const bobX = 1 + 0.08 * Math.sin(walkCycle);
+  const bobY = 1 - 0.08 * Math.sin(walkCycle);
+  ctx.scale(bobX, bobY);
+
+  // 3. Draw base shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
   ctx.beginPath();
   ctx.ellipse(0, 16, 15, 6, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // 2. Draw slow aura
+  // 4. Draw slow aura
   if (enemy.slowTimer > 0) {
     ctx.strokeStyle = "rgba(116, 214, 253, 0.75)";
     ctx.lineWidth = 3.5;
@@ -668,14 +1016,13 @@ function drawEnemyGraphic(enemy) {
     ctx.stroke();
   }
 
-  // 3. Draw hunter's mark crosshair
+  // 5. Draw hunter's mark crosshair (underneath feet)
   if (enemy.markedTimer > 0) {
     ctx.strokeStyle = "rgba(239, 68, 68, 0.85)";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.ellipse(0, 16, 14, 6, 0, 0, Math.PI * 2);
     ctx.stroke();
-    // Crosshair ticks
     ctx.beginPath();
     ctx.moveTo(-18, 16);
     ctx.lineTo(-13, 16);
@@ -684,7 +1031,8 @@ function drawEnemyGraphic(enemy) {
     ctx.stroke();
   }
 
-  ctx.fillStyle = ENEMIES[enemy.type].color;
+  // 6. Draw enemy body
+  ctx.fillStyle = enemy.flashTimer > 0 ? "#ffffff" : ENEMIES[enemy.type].color;
   ctx.strokeStyle = THEME.ink;
   ctx.lineWidth = 3;
   if (enemy.type === "chip") {
@@ -754,7 +1102,7 @@ function drawEnemyGraphic(enemy) {
     ctx.stroke();
   }
 
-  // 4. Draw shield bubble around the creep
+  // 7. Draw shield bubble around the creep
   if (enemy.shield > 0) {
     ctx.strokeStyle = "rgba(176, 122, 203, 0.85)";
     ctx.lineWidth = 2.5;
@@ -765,7 +1113,50 @@ function drawEnemyGraphic(enemy) {
     ctx.fill();
   }
 
+  // 8. Draw slowed ice crystals floating around
+  if (enemy.slowTimer > 0) {
+    ctx.save();
+    ctx.fillStyle = "#e0f2fe";
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 1;
+    const floatOffset = Math.sin(performance.now() * 0.007) * 3;
+    const drawCrystal = (cx, cy) => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 4);
+      ctx.lineTo(cx + 2.5, cy);
+      ctx.lineTo(cx, cy + 4);
+      ctx.lineTo(cx - 2.5, cy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    };
+    drawCrystal(-16, -5 + floatOffset);
+    drawCrystal(16, 5 - floatOffset);
+    drawCrystal(0, -26 + floatOffset);
+    ctx.restore();
+  }
+
+  // 9. Draw spinning target crosshair above marked creep's head
+  if (enemy.markedTimer > 0) {
+    ctx.save();
+    ctx.strokeStyle = "#ef4444";
+    ctx.lineWidth = 1.5;
+    const cy = -34;
+    ctx.beginPath();
+    ctx.arc(0, cy, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-9, cy); ctx.lineTo(-4, cy);
+    ctx.moveTo(4, cy); ctx.lineTo(9, cy);
+    ctx.moveTo(0, cy - 9); ctx.lineTo(0, cy - 4);
+    ctx.moveTo(0, cy + 4); ctx.lineTo(0, cy + 9);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   ctx.restore();
+
+  // Draw health bar (unrotated, horizontally flat above creep)
   ctx.fillStyle = "rgba(33, 23, 15, 0.9)";
   ctx.fillRect(x - 20, y - 27, 40, 6);
   ctx.fillStyle = "#61d060";
@@ -786,7 +1177,7 @@ function draw() {
   for (let y = 0; y < GRID.rows; y += 1) {
     for (let x = 0; x < GRID.cols; x += 1) {
       const grass = (x + y) % 2 === 0 ? THEME.grassA : THEME.grassB;
-      drawCell(x, y, isPath(x, y) ? THEME.path : grass);
+      drawCell(x, y, engine.isPath(x, y) ? THEME.path : grass);
     }
   }
   ctx.strokeStyle = "#6d4829";
@@ -794,7 +1185,7 @@ function draw() {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
-  PATH.forEach(([x, y], index) => {
+  engine.level.path.forEach(([x, y], index) => {
     const px = x * CELL + CELL / 2;
     const py = y * CELL + CELL / 2;
     if (index === 0) ctx.moveTo(px, py);
@@ -804,7 +1195,7 @@ function draw() {
   ctx.strokeStyle = THEME.pathLight;
   ctx.lineWidth = 11;
   ctx.beginPath();
-  PATH.forEach(([x, y], index) => {
+  engine.level.path.forEach(([x, y], index) => {
     const px = x * CELL + CELL / 2;
     const py = y * CELL + CELL / 2;
     if (index === 0) ctx.moveTo(px, py);
@@ -814,7 +1205,9 @@ function draw() {
   ctx.lineCap = "butt";
   ctx.lineJoin = "miter";
 
-  for (const [x, y] of BUILDABLE) drawBuildPlot(x, y);
+  drawMapProps();
+
+  for (const [x, y] of engine.level.buildable) drawBuildPlot(x, y);
 
   // Draw Entry and Exit labels
   ctx.save();
@@ -822,10 +1215,10 @@ function draw() {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  const [ex, ey] = PATH[0];
+  const [ex, ey] = engine.level.path[0];
   drawEndpoint("IN", ex, ey, "#2f6b39");
 
-  const [ox, oy] = PATH[PATH.length - 1];
+  const [ox, oy] = engine.level.path[engine.level.path.length - 1];
   drawEndpoint("OUT", ox, oy, "#7d2d24");
   ctx.restore();
 
@@ -837,15 +1230,126 @@ function draw() {
     drawEnemyGraphic(enemy);
   }
   for (const shot of engine.projectiles) {
+    const maxLife = shot.color === "#74d6c5" ? 0.15 : 0.18;
+    const ratio = Math.max(0, Math.min(1.0, shot.life / maxLife));
+    const t = 1 - ratio;
+    ctx.save();
+    ctx.globalAlpha = ratio;
+
+    // Draw projectile contrail
     ctx.strokeStyle = shot.color;
-    ctx.lineWidth = 5;
-    ctx.shadowColor = shot.color;
-    ctx.shadowBlur = 9;
+    ctx.lineWidth = 1.2 + ratio * 2.0;
     ctx.beginPath();
     ctx.moveTo(shot.from.x * CELL, shot.from.y * CELL);
     ctx.lineTo(shot.to.x * CELL, shot.to.y * CELL);
     ctx.stroke();
-    ctx.shadowBlur = 0;
+
+    if (shot.type === "chain") {
+      const startX = shot.from.x * CELL;
+      const startY = shot.from.y * CELL;
+      const endX = shot.to.x * CELL;
+      const endY = shot.to.y * CELL;
+      const dx = endX - startX;
+      const dy = endY - startY;
+      const dist = Math.hypot(dx, dy);
+
+      ctx.strokeStyle = "#74d6c5";
+      ctx.lineWidth = 3 * ratio;
+      ctx.shadowColor = "#74d6c5";
+      ctx.shadowBlur = 12 * ratio;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+
+      const steps = 4;
+      for (let i = 1; i < steps; i++) {
+        const fraction = i / steps;
+        const lx = startX + dx * fraction;
+        const ly = startY + dy * fraction;
+        const nx = -dy / dist;
+        const ny = dx / dist;
+        const offset = (Math.random() - 0.5) * 16;
+        ctx.lineTo(lx + nx * offset, ly + ny * offset);
+      }
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    } else {
+      const px = (shot.from.x + (shot.to.x - shot.from.x) * t) * CELL;
+      const py = (shot.from.y + (shot.to.y - shot.from.y) * t) * CELL;
+
+      ctx.save();
+      if (shot.type === "punch") {
+        ctx.translate(px, py);
+        ctx.rotate(t * Math.PI * 4);
+        ctx.fillStyle = "#7e745f";
+        ctx.strokeStyle = "#120c08";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(-4, -2); ctx.lineTo(2, 3);
+        ctx.moveTo(1, -3); ctx.lineTo(-2, 4);
+        ctx.strokeStyle = "#403a2f";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else if (shot.type === "tax") {
+        const angle = Math.atan2(shot.to.y - shot.from.y, shot.to.x - shot.from.x);
+        ctx.translate(px, py);
+        ctx.rotate(angle);
+        ctx.strokeStyle = "#a85c2a";
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(-12, 0);
+        ctx.lineTo(8, 0);
+        ctx.stroke();
+
+        ctx.fillStyle = "#e5e7eb";
+        ctx.strokeStyle = "#120c08";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(8, -4);
+        ctx.lineTo(16, 0);
+        ctx.lineTo(8, 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (shot.type === "radio") {
+        ctx.translate(px, py);
+        ctx.fillStyle = "#386fb0";
+        ctx.strokeStyle = "#a9ddff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(169, 221, 255, 0.45)";
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (shot.type === "freezer") {
+        ctx.translate(px, py);
+        ctx.rotate(performance.now() * 0.01);
+        ctx.fillStyle = "#d8f5ff";
+        ctx.strokeStyle = "#4f8fc7";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-4, -8);
+        ctx.lineTo(4, -8);
+        ctx.lineTo(8, 0);
+        ctx.lineTo(4, 8);
+        ctx.lineTo(-4, 8);
+        ctx.lineTo(-8, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    ctx.restore();
   }
 
   // Draw Range Overlay
@@ -859,7 +1363,7 @@ function draw() {
       rangeToDraw = existing.stats.range;
       rangeCenter = { x: hoveredCell.x, y: hoveredCell.y };
       rangeColor = existing.stats.color;
-    } else if (isBuildable(hoveredCell.x, hoveredCell.y) && !engine.occupiedCells.has(`${hoveredCell.x},${hoveredCell.y}`)) {
+    } else if (engine.isBuildable(hoveredCell.x, hoveredCell.y) && !engine.occupiedCells.has(`${hoveredCell.x},${hoveredCell.y}`)) {
       const blueprint = TOWERS[selectedTowerType];
       if (blueprint) {
         rangeToDraw = blueprint.range;
@@ -887,19 +1391,127 @@ function draw() {
     ctx.strokeStyle = rangeColor;
     ctx.lineWidth = 2.5;
     ctx.setLineDash([7, 5]);
+    ctx.lineDashOffset = rangeDashOffset;
     ctx.stroke();
     ctx.restore();
   }
 
   drawParticles();
   drawFloatingTexts();
+  drawLowLivesVignette();
+  drawBanner();
 
   ctx.restore();
+}
+
+function renderSpells() {
+  const meteorBtn = app.querySelector("#spell-meteor");
+  const frostBtn = app.querySelector("#spell-frost");
+  
+  if (!meteorBtn || !frostBtn) return;
+  
+  meteorBtn.classList.toggle("active-cast", activeSpell === "meteor");
+  frostBtn.classList.toggle("active-cast", activeSpell === "frost");
+  
+  const canAffordMeteor = engine.money >= 25;
+  const canAffordFrost = engine.money >= 30;
+  
+  meteorBtn.disabled = meteorCooldown > 0 || !canAffordMeteor || engine.status !== "running";
+  frostBtn.disabled = frostCooldown > 0 || !canAffordFrost || engine.status !== "running";
+  
+  meteorBtn.querySelector("span").textContent = meteorCooldown > 0 
+    ? `Cooldown: ${Math.ceil(meteorCooldown)}s`
+    : `25 Gold · CD: 20s`;
+  frostBtn.querySelector("span").textContent = frostCooldown > 0 
+    ? `Cooldown: ${Math.ceil(frostCooldown)}s`
+    : `30 Gold · CD: 30s`;
+}
+
+function updateOverlays() {
+  const menu = app.querySelector("#menu-overlay");
+  const gameOver = app.querySelector("#game-over-overlay");
+  
+  if (gameState === "menu") {
+    menu.classList.remove("hidden");
+    gameOver.classList.add("hidden");
+    
+    const menuCards = app.querySelector("#menu-level-cards");
+    menuCards.innerHTML = LEVELS.map((level) => {
+      const key = `runehold-highscore-level-${level.id}`;
+      const high = localStorage.getItem(key) ?? 0;
+      const activeClass = engine.level.id === level.id ? "active" : "";
+      return `
+        <div class="menu-level-card ${activeClass}" data-menu-level="${level.id}">
+          <h4>${level.name}</h4>
+          <p>${level.waves.length} waves · Starting Gold: ${formatMoney(level.startingMoney)}</p>
+          ${high > 0 ? `<p style="color: #ffe7a0; margin-top: 4px;">Best Wave: ${high}</p>` : ""}
+        </div>
+      `;
+    }).join("");
+    
+    menuCards.querySelectorAll(".menu-level-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const levelId = Number(card.dataset.menuLevel);
+        engine.loadLevel(levelId);
+        sounds.play("levelSelect");
+        generateMapProps();
+        updateOverlays();
+      });
+    });
+  } else {
+    menu.classList.add("hidden");
+  }
+  
+  if (gameState === "victory" || gameState === "defeat") {
+    gameOver.classList.remove("hidden");
+    const title = app.querySelector("#game-over-title");
+    const sub = app.querySelector("#game-over-subtitle");
+    
+    if (gameState === "victory") {
+      title.textContent = "VICTORY";
+      title.className = "won";
+      sub.textContent = "Runehold stands victorious! The hold stands strong.";
+      
+      const nextBtn = app.querySelector("#game-over-action-btn");
+      if (engine.level.id < LEVELS.length) {
+        nextBtn.textContent = "NEXT LEVEL";
+        nextBtn.disabled = false;
+      } else {
+        nextBtn.textContent = "CAMPAIGN COMPLETED";
+        nextBtn.disabled = true;
+      }
+    } else {
+      title.textContent = "DEFEAT";
+      title.className = "lost";
+      sub.textContent = "The hold has fallen. Rebuild your defenses.";
+      
+      const nextBtn = app.querySelector("#game-over-action-btn");
+      nextBtn.textContent = "TRY AGAIN";
+      nextBtn.disabled = false;
+    }
+    
+    app.querySelector("#stat-level-name").textContent = engine.level.name.split(":")[1]?.trim() ?? engine.level.name;
+    
+    const maxWaves = engine.level.waves.length;
+    const waveReached = gameState === "victory" ? maxWaves : Math.min(engine.waveIndex + 1, maxWaves);
+    app.querySelector("#stat-wave-reached").textContent = `${waveReached}/${maxWaves}`;
+    app.querySelector("#stat-gold-earned").textContent = formatMoney(engine.money);
+  } else {
+    gameOver.classList.add("hidden");
+  }
 }
 
 function refresh() {
   renderHud();
   draw();
+  renderSpells();
+  updateOverlays();
+  
+  if (activeSpell) {
+    canvas.classList.add("targeting-spell");
+  } else {
+    canvas.classList.remove("targeting-spell");
+  }
 }
 
 app.addEventListener("click", (event) => {
@@ -922,6 +1534,7 @@ app.addEventListener("click", (event) => {
     inspectKey = "";
     sounds.play("levelSelect");
     renderControls();
+    generateMapProps();
     announceLevel(engine.level.id);
   } else if (tower) {
     selectedTowerType = tower.dataset.tower;
@@ -941,6 +1554,7 @@ app.addEventListener("click", (event) => {
     selectedTowerIndex = -1;
     inspectKey = "";
     sounds.play("resetLevel");
+    generateMapProps();
     announceLevel(engine.level.id);
   } else if (event.target.matches("[data-testid='upgrade-tower']")) {
     engine.upgradeTower(selectedTowerIndex, Number(event.target.dataset.upgradeChoice ?? 0));
@@ -988,6 +1602,47 @@ canvas.addEventListener("click", (event) => {
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor((event.clientX - rect.left) / (rect.width / GRID.cols));
   const y = Math.floor((event.clientY - rect.top) / (rect.height / GRID.rows));
+
+  if (activeSpell) {
+    const cost = activeSpell === "meteor" ? 25 : 30;
+    if (engine.money >= cost) {
+      engine.money -= cost;
+      const origin = { x: x + 0.5, y: y + 0.5 };
+      const radius = activeSpell === "meteor" ? 1.5 : 2.0;
+      
+      const targets = engine.enemies.filter((enemy) => {
+        const pos = engine.enemyCenter(enemy);
+        return Math.hypot(pos.x - origin.x, pos.y - origin.y) <= radius;
+      });
+      
+      if (activeSpell === "meteor") {
+        sounds.play("defeat", 0.8, "vault");
+        addExplosion(origin.x, origin.y, "#f97316", 24);
+        
+        for (const target of targets) {
+          target.hp -= 50;
+          const targetPos = engine.enemyCenter(target);
+          addFloatingText(targetPos.x, targetPos.y - 0.2, "-50", "#ef4444");
+        }
+        meteorCooldown = 20;
+      } else if (activeSpell === "frost") {
+        sounds.play("shoot", 0.6, "freezer");
+        addExplosion(origin.x, origin.y, "#93c5fd", 18);
+        
+        for (const target of targets) {
+          target.slowTimer = 4.0;
+          target.slowFactor = 0.65;
+          const targetPos = engine.enemyCenter(target);
+          addFloatingText(targetPos.x, targetPos.y - 0.2, "FROZEN", "#38bdf8");
+        }
+        frostCooldown = 30;
+      }
+      activeSpell = null;
+    }
+    refresh();
+    return;
+  }
+
   const existing = engine.towers.findIndex((tower) => tower.x === x && tower.y === y);
   if (existing >= 0) {
     selectedTowerIndex = existing;
@@ -1034,6 +1689,17 @@ function loop(now) {
   updateFloatingTexts(simDt);
   updateParticles(simDt);
   shakeTimer = Math.max(0, shakeTimer - dt);
+  
+  // Decrement enemy hit flash timers
+  for (const enemy of engine.enemies) {
+    if (enemy.flashTimer > 0) {
+      enemy.flashTimer = Math.max(0, enemy.flashTimer - simDt);
+    }
+  }
+
+  // Spin range circles and tick banners
+  rangeDashOffset = (rangeDashOffset - simDt * 10) % 12;
+  bannerTimer = Math.max(0, bannerTimer - simDt);
 
   engine.tick(dt);
   processEvents(engine.events);
@@ -1049,6 +1715,134 @@ app.querySelectorAll("[data-volume-channel]").forEach((input) => {
   input.value = Math.round((sounds.volumes[channel] ?? 0.7) * 100);
 });
 
+generateMapProps();
 renderControls();
 refresh();
 requestAnimationFrame(loop);
+
+// Spell triggers click listeners
+app.querySelector("#spell-meteor").addEventListener("click", (e) => {
+  if (meteorCooldown > 0 || engine.money < 25) return;
+  if (activeSpell === "meteor") {
+    activeSpell = null;
+  } else {
+    activeSpell = "meteor";
+    selectedTowerIndex = -1;
+  }
+  refresh();
+});
+
+app.querySelector("#spell-frost").addEventListener("click", (e) => {
+  if (frostCooldown > 0 || engine.money < 30) return;
+  if (activeSpell === "frost") {
+    activeSpell = null;
+  } else {
+    activeSpell = "frost";
+    selectedTowerIndex = -1;
+  }
+  refresh();
+});
+
+// Overlay button click listeners
+app.querySelector("#menu-start-btn").addEventListener("click", () => {
+  gameState = "play";
+  if (sounds.enabled) {
+    sounds.enable(true);
+  }
+  announceLevel(engine.level.id);
+  showBanner(engine.level.name, "PREPARE YOUR DEFENSES", 2.5);
+  refresh();
+});
+
+app.querySelector("#game-over-action-btn").addEventListener("click", () => {
+  if (gameState === "victory") {
+    if (engine.level.id < LEVELS.length) {
+      engine.loadLevel(engine.level.id + 1);
+      gameState = "play";
+      generateMapProps();
+      announceLevel(engine.level.id);
+      showBanner(engine.level.name, "PREPARE YOUR DEFENSES", 2.5);
+    }
+  } else if (gameState === "defeat") {
+    engine.loadLevel(engine.level.id);
+    gameState = "play";
+    generateMapProps();
+    announceLevel(engine.level.id);
+    showBanner(engine.level.name, "PREPARE YOUR DEFENSES", 2.5);
+  }
+  refresh();
+});
+
+app.querySelector("#game-over-retry-btn").addEventListener("click", () => {
+  engine.loadLevel(engine.level.id);
+  gameState = "play";
+  generateMapProps();
+  announceLevel(engine.level.id);
+  showBanner(engine.level.name, "PREPARE YOUR DEFENSES", 2.5);
+  refresh();
+});
+
+app.querySelector("#game-over-menu-btn").addEventListener("click", () => {
+  gameState = "menu";
+  refresh();
+});
+
+// Keyboard Hotkeys
+window.addEventListener("keydown", (event) => {
+  if (gameState !== "play") return;
+  
+  if (event.code === "Space") {
+    event.preventDefault();
+    if (activeSpell) {
+      activeSpell = null;
+    } else {
+      const startWaveBtn = app.querySelector("[data-testid='start-wave']");
+      if (!startWaveBtn.disabled) {
+        engine.startWave();
+      } else {
+        engine.speedMultiplier = engine.speedMultiplier === 0 ? 1 : 0;
+      }
+    }
+    refresh();
+  } else if (event.code === "Escape") {
+    activeSpell = null;
+    selectedTowerIndex = -1;
+    refresh();
+  } else if (event.code === "Digit1") {
+    selectedTowerType = "punch";
+    sounds.play("select", 1.2, selectedTowerType);
+    renderControls();
+  } else if (event.code === "Digit2") {
+    selectedTowerType = "radio";
+    sounds.play("select", 1.2, selectedTowerType);
+    renderControls();
+  } else if (event.code === "Digit3") {
+    selectedTowerType = "tax";
+    sounds.play("select", 1.2, selectedTowerType);
+    renderControls();
+  } else if (event.code === "Digit4") {
+    selectedTowerType = "freezer";
+    sounds.play("select", 1.2, selectedTowerType);
+    renderControls();
+  } else if (event.code === "KeyU") {
+    if (selectedTowerIndex >= 0) {
+      engine.upgradeTower(selectedTowerIndex, 0);
+      processEvents(engine.events);
+      refresh();
+    }
+  } else if (event.code === "KeyI") {
+    if (selectedTowerIndex >= 0) {
+      engine.upgradeTower(selectedTowerIndex, 1);
+      processEvents(engine.events);
+      refresh();
+    }
+  } else if (event.code === "KeyS") {
+    if (selectedTowerIndex >= 0) {
+      engine.sellTower(selectedTowerIndex);
+      selectedTowerIndex = -1;
+      inspectKey = "";
+      processEvents(engine.events);
+      refresh();
+    }
+  }
+});

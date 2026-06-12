@@ -96,6 +96,7 @@ Demolish refunds 70% of total tower investment, including upgrades.
 * The initial fantasy RTS shell is more genre-aligned than the original industrial style.
 * The board-first layout makes the game feel playable rather than like a UI mockup.
 * Range preview and sell/refund reduce frustration.
+* Compact stat comparisons make placement and upgrade choices easier to scan.
 * Speed controls support repeated play.
 * Particles, floating text, sound, and shake make combat readable and satisfying.
 * Existing tests make mechanics safer to change.

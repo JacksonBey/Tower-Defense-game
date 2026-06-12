@@ -19,11 +19,13 @@ const ADDITIVE_UPGRADE_KEYS = new Set([
 ]);
 const MAX_UPGRADE_KEYS = new Set(["multishot", "chainTargets", "splashRadius", "executePercent", "aoeSlowRadius"]);
 
-export function isBuildable(x, y) {
+export function isBuildable(x, y, engine) {
+  if (engine) return engine.isBuildable(x, y);
   return x >= 0 && y >= 0 && x < GRID.cols && y < GRID.rows && buildKeys.has(`${x},${y}`);
 }
 
-export function isPath(x, y) {
+export function isPath(x, y, engine) {
+  if (engine) return engine.isPath(x, y);
   return pathKeys.has(`${x},${y}`);
 }
 
@@ -85,6 +87,8 @@ export class GameEngine {
       ...level,
       waves: [...level.waves]
     };
+    this.pathKeys = new Set((this.level.path ?? PATH).map(keyOf));
+    this.buildKeys = new Set((this.level.buildable ?? BUILDABLE).map(keyOf));
     this.money = level.startingMoney;
     this.lives = level.lives;
     this.waveIndex = 0;
@@ -99,6 +103,14 @@ export class GameEngine {
     this.time = 0;
     this.speedMultiplier = 1;
     this.endlessMode = false;
+  }
+
+  isPath(x, y) {
+    return this.pathKeys.has(`${x},${y}`);
+  }
+
+  isBuildable(x, y) {
+    return x >= 0 && y >= 0 && x < GRID.cols && y < GRID.rows && this.buildKeys.has(`${x},${y}`);
   }
 
   generateEndlessWave(waveIndex) {
@@ -120,7 +132,7 @@ export class GameEngine {
   placeTower(type, x, y) {
     const blueprint = TOWERS[type];
     if (!blueprint) return { ok: false, reason: "unknown tower" };
-    if (!isBuildable(x, y) || this.occupiedCells.has(`${x},${y}`)) {
+    if (!this.isBuildable(x, y) || this.occupiedCells.has(`${x},${y}`)) {
       return { ok: false, reason: "invalid pad" };
     }
     if (this.money < blueprint.cost) return { ok: false, reason: "not enough currency" };
@@ -136,7 +148,7 @@ export class GameEngine {
       stats: { ...blueprint }
     });
     this.message = `${blueprint.name} stands ready.`;
-    this.events.push({ type: "place", tower: type });
+    this.events.push({ type: "place", tower: type, x, y });
     return { ok: true };
   }
 
@@ -157,7 +169,7 @@ export class GameEngine {
     tower.upgradeHistory.push(upgrade);
     tower.stats = applyUpgradeStats(tower.stats, upgrade);
     this.message = `${tower.stats.name} got ${upgrade.name}.`;
-    this.events.push({ type: "upgrade", tower: tower.type });
+    this.events.push({ type: "upgrade", tower: tower.type, x: tower.x, y: tower.y });
     return { ok: true };
   }
 
@@ -170,7 +182,7 @@ export class GameEngine {
     this.money += refund;
     this.towers.splice(index, 1);
     this.message = `${tower.stats.name} salvaged. Recovered ${refund}.`;
-    this.events.push({ type: "sell", tower: tower.type });
+    this.events.push({ type: "sell", tower: tower.type, x: tower.x, y: tower.y });
     return { ok: true, refund };
   }
 
@@ -186,11 +198,12 @@ export class GameEngine {
   }
 
   enemyCenter(enemy) {
-    const seg = Math.min(Math.floor(enemy.progress), PATH.length - 1);
-    const next = Math.min(seg + 1, PATH.length - 1);
+    const path = this.level.path ?? PATH;
+    const seg = Math.min(Math.floor(enemy.progress), path.length - 1);
+    const next = Math.min(seg + 1, path.length - 1);
     const t = Math.min(1, enemy.progress - seg);
-    const [ax, ay] = PATH[seg];
-    const [bx, by] = PATH[next];
+    const [ax, ay] = path[seg];
+    const [bx, by] = path[next];
     return { x: ax + (bx - ax) * t + 0.5, y: ay + (by - ay) * t + 0.5 };
   }
 
@@ -297,13 +310,14 @@ export class GameEngine {
       enemy.markedTimer = Math.max(0, (enemy.markedTimer ?? 0) - adjustedDt);
     }
 
-    const escaped = this.enemies.filter((enemy) => enemy.progress >= PATH.length - 1);
+    const path = this.level.path ?? PATH;
+    const escaped = this.enemies.filter((enemy) => enemy.progress >= path.length - 1);
     if (escaped.length) {
       const livesLost = escaped.reduce((sum, enemy) => sum + (hasTrait(enemy, "elite") ? 2 : 1), 0);
       this.lives -= livesLost;
       this.events.push({ type: "escape", count: escaped.length, livesLost });
     }
-    this.enemies = this.enemies.filter((enemy) => enemy.progress < PATH.length - 1);
+    this.enemies = this.enemies.filter((enemy) => enemy.progress < path.length - 1);
 
     for (const tower of this.towers) {
       tower.cooldownLeft -= adjustedDt;
@@ -386,13 +400,13 @@ export class GameEngine {
             current = nextTarget;
             hitEnemies.add(current.id);
             this.applyTowerDamage({ stats: { damage: chainDamage } }, current);
-            this.projectiles.push({ from: currentPos, to: this.enemyCenter(current), life: 0.15, color: "#74d6c5" });
+            this.projectiles.push({ from: currentPos, to: this.enemyCenter(current), life: 0.15, color: "#74d6c5", type: "chain" });
             chainCount--;
           }
         }
 
-        this.projectiles.push({ from: origin, to: targetPos, life: 0.18, color: tower.stats.color });
-        this.events.push({ type: "shoot", tower: tower.type, targetX: targetPos.x, targetY: targetPos.y, damage: hit.damage, absorbed: hit.absorbed });
+        this.projectiles.push({ from: origin, to: targetPos, life: 0.18, color: tower.stats.color, type: tower.type });
+        this.events.push({ type: "shoot", tower: tower.type, targetX: targetPos.x, targetY: targetPos.y, damage: hit.damage, absorbed: hit.absorbed, enemyId: target.id });
       }
 
       tower.cooldownLeft = tower.stats.cooldown;

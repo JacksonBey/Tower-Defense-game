@@ -160,6 +160,16 @@ Coordinates the browser experience:
 
 This file is currently the largest file. If it grows further, consider extracting rendering helpers or UI rendering into separate modules with new `SYSTEM.md` sections.
 
+## Stat-Comparison
+
+**File**: `work/src/statComparison.js`
+
+Calculates and formats differences between tower tiers:
+
+* `formatStatValue(def, value)`: Formats numeric properties (decimal places, seconds, percents).
+* `getTowerStatRows(stats, upgrade)`: Compares active attributes (damage, range, cooldown, slow) before and after upgrade application.
+* `getTowerCounterTags(stats, upgrade)`: Extracts descriptive tags for passive traits and target bonuses.
+
 ## HTML-Entrypoint
 
 **File**: `work/index.html`
@@ -186,7 +196,7 @@ The Playwright config starts the dev server automatically for browser tests.
 
 ## Unit-Testing
 
-**Files**: `work/tests/data.test.js`, `work/tests/economy.test.js`, `work/tests/engine.test.js`, `work/tests/simulation.test.js`, `work/tests/sound.test.js`
+**Files**: `work/tests/data.test.js`, `work/tests/economy.test.js`, `work/tests/engine.test.js`, `work/tests/simulation.test.js`, `work/tests/sound.test.js`, `work/tests/statComparison.test.js`
 
 Unit tests protect:
 
@@ -198,6 +208,7 @@ Unit tests protect:
 * Wave progression, enemy defeat rewards, loss state, and speed scaling.
 * Deterministic balance simulations for viable strategies and targeted counters.
 * Sound enabled-state and channel-volume persistence.
+* Tower stat comparison formatting and counter tag summaries.
 
 Add unit tests when changing simulation rules, currency, level data, or tower/enemy balance contracts.
 
@@ -209,6 +220,7 @@ Browser scenarios protect player workflows:
 
 * Initial content loads.
 * Tower placement and branching upgrades.
+* Pre-placement and upgrade stat comparison visibility.
 * Starting and resolving a wave.
 * Level switching and reset values.
 * Invalid placement feedback.

@@ -43,4 +43,36 @@ describe("game content", () => {
       expect(finale.some((type) => ENEMIES[type].traits.includes("elite"))).toBe(true);
     }
   });
+
+  it("defines distinct, continuous paths and valid build pads for all levels", () => {
+    const pathStrings = LEVELS.map(lvl => JSON.stringify(lvl.path));
+    const buildableStrings = LEVELS.map(lvl => JSON.stringify(lvl.buildable));
+    expect(new Set(pathStrings).size).toBe(3);
+    expect(new Set(buildableStrings).size).toBe(3);
+
+    for (const level of LEVELS) {
+      expect(level.path).toBeDefined();
+      expect(level.path.length).toBeGreaterThan(0);
+      expect(level.buildable).toBeDefined();
+      expect(level.buildable.length).toBeGreaterThan(0);
+
+      // Verify path continuity (adjacent moves only)
+      for (let i = 0; i < level.path.length - 1; i++) {
+        const [x1, y1] = level.path[i];
+        const [x2, y2] = level.path[i + 1];
+        const dist = Math.abs(x1 - x2) + Math.abs(y1 - y2);
+        expect(dist).toBe(1);
+      }
+
+      // Verify build pads are legal (in bounds and no path overlap)
+      const pathSet = new Set(level.path.map(([x, y]) => `${x},${y}`));
+      for (const [x, y] of level.buildable) {
+        expect(x).toBeGreaterThanOrEqual(0);
+        expect(x).toBeLessThan(12);
+        expect(y).toBeGreaterThanOrEqual(0);
+        expect(y).toBeLessThan(8);
+        expect(pathSet.has(`${x},${y}`)).toBe(false);
+      }
+    }
+  });
 });

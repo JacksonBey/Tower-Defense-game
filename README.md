@@ -16,6 +16,7 @@ The economy still uses awkward denominations of 7 for personality.
   * `S` Slab = 7 Bolts
   * `B` Bolt = 1 Bolt
 * Grid-based tower placement on rune build plots.
+* Compact stat comparisons before tower placement and upgrade selection.
 * Tower range preview on hover and selection.
 * Salvage/sell with 70% total investment refund.
 * Speed controls: 1x, 2x, Pause.

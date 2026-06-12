@@ -14,7 +14,7 @@ describe("engine", () => {
     expect(game.placeTower("punch", 0, 2).ok).toBe(false);
     expect(game.placeTower("punch", 1, 0).ok).toBe(true);
     expect(game.money).toBe(58);
-    expect(game.events).toContainEqual({ type: "place", tower: "punch" });
+    expect(game.events).toContainEqual({ type: "place", tower: "punch", x: 1, y: 0 });
     expect(game.placeTower("punch", 1, 0).ok).toBe(false);
   });
 
@@ -24,7 +24,7 @@ describe("engine", () => {
     expect(game.upgradeTower(0).ok).toBe(true);
     expect(game.towers[0].level).toBe(1);
     expect(game.towers[0].stats.damage).toBe(26);
-    expect(game.events).toContainEqual({ type: "upgrade", tower: "punch" });
+    expect(game.events).toContainEqual({ type: "upgrade", tower: "punch", x: 1, y: 0 });
   });
 
   it("supports mutually exclusive upgrade branch choices", () => {
@@ -96,7 +96,7 @@ describe("engine", () => {
     expect(sellRes.refund).toBe(44);
     expect(game.money).toBe(23 + 44); // 67
     expect(game.towers).toHaveLength(0);
-    expect(game.events).toContainEqual({ type: "sell", tower: "punch" });
+    expect(game.events).toContainEqual({ type: "sell", tower: "punch", x: 1, y: 0 });
   });
 
   it("scales game ticks correctly with speedMultiplier", () => {
